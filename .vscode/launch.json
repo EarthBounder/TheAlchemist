@@ -9,8 +9,8 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/net8.0/TheAlchemist.dll",
+            // Must match TheAlchemist.csproj <TargetFramework> (net8.0-windows).
+            "program": "${workspaceFolder}/bin/Debug/net8.0-windows/TheAlchemist.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

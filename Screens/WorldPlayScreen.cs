@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -23,6 +24,7 @@ public sealed class WorldPlayScreen : IGameScreen
     private readonly Dictionary<string, Texture2D> _terrainPlayTex = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Texture2D> _objectPlayTex = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Texture2D> _herbPlayTex = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Texture2D _customMapBackground;
     private readonly List<(int x, int y)> _clickPath = new();
 
     private int _heldMoveDx;
@@ -40,12 +42,29 @@ public sealed class WorldPlayScreen : IGameScreen
             _procMap = null;
             world.EnsureCompatibleWithCustomMap(_customMap);
             LoadPlayTextures(game.GraphicsDevice);
+            _customMapBackground = TryLoadBackgroundTexture(game.GraphicsDevice, _customMap.BackgroundImagePath);
         }
         else
         {
             _procMap = new ProcTileMap(world.Seed);
             world.EnsureCompatibleWithMap(_procMap);
             _procMap.ApplyPickedFlowers(world.PickedFlowerCells);
+            _customMapBackground = null;
+        }
+    }
+
+    private static Texture2D TryLoadBackgroundTexture(GraphicsDevice gd, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return null;
+        try
+        {
+            using FileStream fs = File.OpenRead(path);
+            return Texture2D.FromStream(gd, fs);
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -71,9 +90,7 @@ public sealed class WorldPlayScreen : IGameScreen
     {
         if (_procMap != null)
             return _procMap.IsWalkable(tx, ty);
-        if (!_customMap.Contains(tx, ty))
-            return false;
-        return TerrainRules.IsWalkableTerrainId(_customMap.Terrain[_customMap.Pack(tx, ty)]);
+        return EditorMapData.IsCellWalkableForPlay(_customMap, tx, ty);
     }
 
     private void ClearFlowerAt(int tx, int ty)
@@ -330,6 +347,17 @@ public sealed class WorldPlayScreen : IGameScreen
         GetRoomViewOrigin(px, py, out int originX, out int originY, out int roomOx, out int roomOy, out int roomEndX,
             out int roomEndY);
         RoomView.GetRoomIndices(px, py, out int roomIx, out int roomIy);
+
+        bool customBg = _customMap != null && _customMapBackground != null;
+        if (customBg)
+        {
+            int mapPxW = _customMap.Width * ts;
+            int mapPxH = _customMap.Height * ts;
+            spriteBatch.Draw(_customMapBackground, new Rectangle(originX, originY, mapPxW, mapPxH), Color.White);
+        }
+
+        Color terrainTint = customBg ? Color.White * 0.82f : Color.White;
+
         for (int ty = roomOy; ty < roomEndY; ty++)
         for (int tx = roomOx; tx < roomEndX; tx++)
         {
@@ -342,9 +370,12 @@ public sealed class WorldPlayScreen : IGameScreen
                 string tid = _customMap.Terrain[idx];
                 var fill = TerrainFallbackColor(tid, pal);
                 var cell = new Rectangle(sx, sy, ts, ts);
-                spriteBatch.Draw(pixel, cell, fill);
+                if (!customBg)
+                    spriteBatch.Draw(pixel, cell, fill);
+                else
+                    spriteBatch.Draw(pixel, cell, fill * 0.22f);
                 if (_terrainPlayTex.TryGetValue(tid, out Texture2D tt) && tt != null)
-                    DrawCover(spriteBatch, tt, cell, 1f);
+                    DrawCover(spriteBatch, tt, cell, 1f, terrainTint);
             }
             else
             {
@@ -398,15 +429,16 @@ public sealed class WorldPlayScreen : IGameScreen
             Vector2.Zero, 0.72f, SpriteEffects.None, 0f);
     }
 
-    private static void DrawCover(SpriteBatch spriteBatch, Texture2D tex, Rectangle cell, float cover)
+    private static void DrawCover(SpriteBatch spriteBatch, Texture2D tex, Rectangle cell, float cover, Color? tint = null)
     {
+        Color c = tint ?? Color.White;
         int inner = Math.Max(1, (int)(Math.Min(cell.Width, cell.Height) * cover));
         float sc = inner / (float)Math.Max(1, Math.Max(tex.Width, tex.Height));
         int dw = Math.Max(1, (int)Math.Round(tex.Width * sc));
         int dh = Math.Max(1, (int)Math.Round(tex.Height * sc));
         int cx = cell.X + (cell.Width - dw) / 2;
         int cy = cell.Y + (cell.Height - dh) / 2;
-        spriteBatch.Draw(tex, new Rectangle(cx, cy, dw, dh), Color.White);
+        spriteBatch.Draw(tex, new Rectangle(cx, cy, dw, dh), c);
     }
 
     private static Color TerrainFallbackColor(string id, UiThemePalette pal)

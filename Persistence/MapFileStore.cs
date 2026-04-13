@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using TheAlchemist.World;
 
@@ -38,6 +39,27 @@ public static class MapFileStore
         return maxSlotExclusive - 1;
     }
 
+    public static string SanitizeMapBaseName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "untitled";
+        var sb = new StringBuilder();
+        foreach (char c in name.Trim())
+        {
+            if (char.IsAsciiLetterOrDigit(c) || c is '_' or '-')
+                sb.Append(c);
+            else if (char.IsWhiteSpace(c))
+                sb.Append('_');
+        }
+
+        string s = sb.ToString().Trim('_');
+        if (s.Length == 0)
+            return "untitled";
+        if (s.Length > 80)
+            s = s.Substring(0, 80);
+        return s;
+    }
+
     public static bool TrySave(EditorMapData map, int slot)
     {
         map.Schema = EditorMapData.CurrentSchema;
@@ -46,6 +68,24 @@ public static class MapFileStore
         {
             Directory.CreateDirectory(MapsDirectory);
             string path = PathForSlot(slot);
+            File.WriteAllText(path, JsonSerializer.Serialize(map, JsonOptions));
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool TrySaveNamed(EditorMapData map, string displayName)
+    {
+        map.Schema = EditorMapData.CurrentSchema;
+        map.NormalizeInPlace();
+        try
+        {
+            Directory.CreateDirectory(MapsDirectory);
+            string baseName = SanitizeMapBaseName(displayName);
+            string path = Path.Combine(MapsDirectory, baseName + ".json");
             File.WriteAllText(path, JsonSerializer.Serialize(map, JsonOptions));
             return true;
         }

@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -7,9 +8,11 @@ namespace TheAlchemist.World;
 public static class MapOverlayDraw
 {
     public static void DrawAnchoredTopLeft(SpriteBatch spriteBatch, Texture2D texture, int anchorCellTopLeftX,
-        int anchorCellTopLeftY)
+        int anchorCellTopLeftY, float cellSizePixels = 36f)
     {
-        spriteBatch.Draw(texture,
-            new Rectangle(anchorCellTopLeftX, anchorCellTopLeftY, texture.Width, texture.Height), Color.White);
+        float s = cellSizePixels / ProcTileMap.TileSizePixels;
+        int dw = Math.Max(1, (int)Math.Round(texture.Width * s));
+        int dh = Math.Max(1, (int)Math.Round(texture.Height * s));
+        spriteBatch.Draw(texture, new Rectangle(anchorCellTopLeftX, anchorCellTopLeftY, dw, dh), Color.White);
     }
 }

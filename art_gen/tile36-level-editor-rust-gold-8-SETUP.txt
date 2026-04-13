@@ -1,0 +1,47 @@
+tile36-level-editor-rust-gold-8.json
+====================================
+Based on test-workflow-2-rust-gold-8.json, tuned for TheAlchemist level editor
+ground tiles: final PNG size is 36x36 (ProcTileMap.TileSizePixels).
+
+Pipeline
+--------
+Empty latent: 512 x 512 (divisible by 8 for SDXL VAE; faster than 1024^2).
+  -> KSampler -> VAEDecode
+  -> Pixel8Bit (GlitchNodes) rust-gold-8 fixed palette
+  -> ImageScale nearest-exact 36 x 36  (drop into Content/art/tiles/)
+
+Requires
+--------
+- ComfyUI + same custom nodes as the parent workflow (Pixel8Bit / GlitchNodes).
+- Checkpoint: sd_xl_base_1.0.safetensors (or swap in UI).
+- LoRA: pixel-art-xl-v1.1.safetensors
+
+Tweaks
+------
+- Edit the positive prompt subject (grass/pebbles is a default example); keep
+  "single tile filling frame" / "seamless" / palette lines for best editor fit.
+- If quality is thin at 512, try 640 or 768 in EmptyLatentImage (still multiples of 8).
+- For object/herb sprites (not full-tile ground), you may want a different prompt
+  and optional crop; this workflow assumes one tile = one texture.
+
+Why you might see a "dungeon map" or atlas in the 512 preview
+-------------------------------------------------------------
+SDXL often interprets "top-down" + game-art LoRA as a level layout, corridors,
+yellow paths, and clustered props. The workflow is meant to output ONE uniform
+ground texture; the 36x36 export is a heavy downscale of that full square.
+
+Mitigations (try in order):
+1. Use the updated prompts in the JSON (stronger "no map / no props" negatives).
+2. Lower KSampler CFG (e.g. 5.5–6.5) or switch sampler to dpmpp_2m if results are
+   too "busy".
+3. Shorten the positive prompt to subject + "seamless tile" + palette line only.
+4. If Pixel8Bit adds speckle: set dither to None (already default) or reduce
+   palette-related settings in that node per GlitchNodes docs.
+5. For hero/objects, use a different workflow — this graph is for full-tile ground.
+
+Output files
+------------
+ComfyUI output/ prefixes:
+  tile36-editor-postpalette-   (512, quantized)
+  tile36-editor-export-        (36x36 — use for game)
+  tile36-editor-export-b-      (duplicate save slot)

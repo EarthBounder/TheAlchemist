@@ -3,10 +3,10 @@ using System.Text.Json;
 
 namespace TheAlchemist.World;
 
-/// <summary>Authoring-time map: terrain tile id plus optional object/herb sprite ids per cell.</summary>
+/// <summary>Authoring-time map: terrain, objects/herbs, per-tile walk flags, optional background path.</summary>
 public sealed class EditorMapData
 {
-    public const int CurrentSchema = 2;
+    public const int CurrentSchema = 3;
 
     public const string DefaultTerrainId = "grass";
 
@@ -20,17 +20,25 @@ public sealed class EditorMapData
     public string[] Objects { get; set; } = Array.Empty<string>();
     public string[] Herbs { get; set; } = Array.Empty<string>();
 
+    /// <summary>When false, hero cannot enter (unless blocked by object/water regardless).</summary>
+    public bool[] Walkable { get; set; } = Array.Empty<bool>();
+
+    /// <summary>Optional absolute path to a background image shown under the grid in the editor.</summary>
+    public string BackgroundImagePath { get; set; }
+
     public static EditorMapData CreateEmpty(int width, int height)
     {
         int n = width * height;
         var terrain = new string[n];
         var objects = new string[n];
         var herbs = new string[n];
+        var walk = new bool[n];
         for (int i = 0; i < n; i++)
         {
             terrain[i] = DefaultTerrainId;
             objects[i] = "";
             herbs[i] = "";
+            walk[i] = true;
         }
 
         return new EditorMapData
@@ -40,7 +48,9 @@ public sealed class EditorMapData
             Height = height,
             Terrain = terrain,
             Objects = objects,
-            Herbs = herbs
+            Herbs = herbs,
+            Walkable = walk,
+            BackgroundImagePath = null
         };
     }
 
@@ -56,8 +66,24 @@ public sealed class EditorMapData
             Height = m.Height,
             Terrain = (string[])m.Terrain.Clone(),
             Objects = (string[])m.Objects.Clone(),
-            Herbs = (string[])m.Herbs.Clone()
+            Herbs = (string[])m.Herbs.Clone(),
+            Walkable = (bool[])m.Walkable.Clone(),
+            BackgroundImagePath = m.BackgroundImagePath
         };
+    }
+
+    /// <summary>Hero movement: terrain (e.g. water), walk mask, and objects block.</summary>
+    public static bool IsCellWalkableForPlay(EditorMapData map, int x, int y)
+    {
+        if (map == null || !map.Contains(x, y))
+            return false;
+        map.NormalizeInPlace();
+        int i = map.Pack(x, y);
+        if (!string.IsNullOrEmpty(map.Objects[i]))
+            return false;
+        if (!map.Walkable[i])
+            return false;
+        return TerrainRules.IsWalkableTerrainId(map.Terrain[i]);
     }
 
     public static void FindWalkableStart(EditorMapData map, out int px, out int py)
@@ -72,7 +98,7 @@ public sealed class EditorMapData
         {
             int x = cx + dx;
             int y = cy + dy;
-            if (map.Contains(x, y) && TerrainRules.IsWalkableTerrainId(map.Terrain[map.Pack(x, y)]))
+            if (map.Contains(x, y) && IsCellWalkableForPlay(map, x, y))
             {
                 px = x;
                 py = y;
@@ -118,6 +144,14 @@ public sealed class EditorMapData
             Herbs = h;
         }
 
+        if (Walkable == null || Walkable.Length != n)
+        {
+            var w = new bool[n];
+            for (int i = 0; i < n; i++)
+                w[i] = true;
+            Walkable = w;
+        }
+
         for (int i = 0; i < Terrain.Length; i++)
         {
             if (string.IsNullOrWhiteSpace(Terrain[i]))
@@ -137,7 +171,7 @@ public sealed class EditorMapData
         }
     }
 
-    /// <summary>Parses JSON, including schema 1 maps with numeric <c>terrain</c> arrays.</summary>
+    /// <summary>Parses JSON, including older maps without <c>walkable</c>.</summary>
     public static bool TryParseMapJson(string json, out EditorMapData map)
     {
         map = null;
@@ -180,6 +214,29 @@ public sealed class EditorMapData
             string[] objects = ParseStringCellArray(root, "objects", n);
             string[] herbs = ParseStringCellArray(root, "herbs", n);
 
+            var walk = new bool[n];
+            for (int i = 0; i < n; i++)
+                walk[i] = true;
+            if (root.TryGetProperty("walkable", out JsonElement we) && we.ValueKind == JsonValueKind.Array)
+            {
+                int len = Math.Min(we.GetArrayLength(), n);
+                for (int i = 0; i < len; i++)
+                {
+                    JsonElement el = we[i];
+                    if (el.ValueKind == JsonValueKind.True || el.ValueKind == JsonValueKind.False)
+                        walk[i] = el.GetBoolean();
+                }
+            }
+
+            string bgPath = null;
+            if (root.TryGetProperty("backgroundImagePath", out JsonElement bg) &&
+                bg.ValueKind == JsonValueKind.String)
+            {
+                string s = bg.GetString();
+                if (!string.IsNullOrWhiteSpace(s))
+                    bgPath = s.Trim();
+            }
+
             map = new EditorMapData
             {
                 Schema = CurrentSchema,
@@ -187,7 +244,9 @@ public sealed class EditorMapData
                 Height = h,
                 Terrain = terrain,
                 Objects = objects,
-                Herbs = herbs
+                Herbs = herbs,
+                Walkable = walk,
+                BackgroundImagePath = bgPath
             };
             return true;
         }

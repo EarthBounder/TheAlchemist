@@ -49,10 +49,15 @@ public sealed class Game1 : Game
     public void ShowMainMenu()
     {
         _testPlayMap = null;
+        DisposeLevelEditorIfActive();
         _screen = new MainMenuScreen(this);
     }
 
-    public void ShowLevelEditor() => _screen = new LevelEditorScreen(this);
+    public void ShowLevelEditor()
+    {
+        DisposeLevelEditorIfActive();
+        _screen = new LevelEditorScreen(this);
+    }
 
     public void ShowWorld(WorldState world)
     {
@@ -71,8 +76,15 @@ public sealed class Game1 : Game
 
     public void PlayTestMap(EditorMapData mapSnapshot)
     {
+        DisposeLevelEditorIfActive();
         _testPlayMap = EditorMapData.Clone(mapSnapshot);
         _screen = new WorldPlayScreen(this, WorldState.NewTestMapPlay(_testPlayMap), _testPlayMap);
+    }
+
+    private void DisposeLevelEditorIfActive()
+    {
+        if (_screen is LevelEditorScreen ed)
+            ed.DisposeGpuResources();
     }
 
     public void SaveWorld(WorldState world)
@@ -319,7 +331,7 @@ public sealed class Game1 : Game
         }
 
         return new UiFrameInput(pointerVirtual, pointerDown, pointerPressed, confirm, escape, start, back, menuShortcut,
-            nav, navH, hotNext, firstNewKey, rawEscape, timeSlower, timeFaster, followHold, floorPan);
+            nav, navH, hotNext, firstNewKey, rawEscape, timeSlower, timeFaster, followHold, floorPan, scrollDelta);
     }
 
     protected override void Draw(GameTime gameTime)

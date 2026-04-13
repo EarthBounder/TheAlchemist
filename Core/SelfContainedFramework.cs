@@ -34,7 +34,8 @@ public readonly struct UiFrameInput(
     bool timeSlowerPressed,
     bool timeFasterPressed,
     bool followHold,
-    Vector2 floorPanPixels)
+    Vector2 floorPanPixels,
+    int scrollWheelDelta)
 {
     public Vector2 PointerVirtual { get; } = pointerVirtual;
     public bool PointerDown { get; } = pointerDown;
@@ -53,6 +54,8 @@ public readonly struct UiFrameInput(
     public bool TimeFasterPressed { get; } = timeFasterPressed;
     public bool FollowHold { get; } = followHold;
     public Vector2 FloorPanPixels { get; } = floorPanPixels;
+    /// <summary>Raw SDL/Windows wheel delta since last frame (typically ±120 per notch).</summary>
+    public int ScrollWheelDelta { get; } = scrollWheelDelta;
 }
 
 public sealed class ThumbstickNavSampler
