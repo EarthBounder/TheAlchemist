@@ -1,0 +1,206 @@
+{
+  "last_node_id": 53,
+  "last_link_id": 15,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [-449, 344],
+      "size": [315, 98],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {"name": "MODEL", "type": "MODEL", "links": [1], "slot_index": 0},
+        {"name": "CLIP", "type": "CLIP", "links": [2], "slot_index": 1},
+        {"name": "VAE", "type": "VAE", "links": [8, 9], "slot_index": 2}
+      ],
+      "title": "Load Base Safetensors",
+      "properties": {"Node name for S&R": "CheckpointLoaderSimple"},
+      "widgets_values": ["sd_xl_base_1.0.safetensors"]
+    },
+    {
+      "id": 39,
+      "type": "LoraLoader",
+      "pos": [-85, 183],
+      "size": [315, 126],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 1},
+        {"name": "clip", "type": "CLIP", "link": 2}
+      ],
+      "outputs": [
+        {"name": "MODEL", "type": "MODEL", "links": [5], "slot_index": 0},
+        {"name": "CLIP", "type": "CLIP", "links": [3, 4], "slot_index": 1}
+      ],
+      "properties": {"Node name for S&R": "LoraLoader"},
+      "widgets_values": ["pixel-art-xl-v1.1.safetensors", 1, 1]
+    },
+    {
+      "id": 48,
+      "type": "LoadImage",
+      "pos": [-449, 520],
+      "size": [315, 314],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [10], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": null, "slot_index": 1}
+      ],
+      "title": "Golden NPC (source)",
+      "properties": {"Node name for S&R": "LoadImage"},
+      "widgets_values": ["example.png", "image"]
+    },
+    {
+      "id": 49,
+      "type": "ImageScale",
+      "pos": [-85, 560],
+      "size": [315, 130],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [{"name": "image", "type": "IMAGE", "link": 10}],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [11], "slot_index": 0}],
+      "title": "Match SDXL canvas (edit W/H)",
+      "properties": {"Node name for S&R": "ImageScale"},
+      "widgets_values": ["nearest-exact", 1024, 1024, "disabled"]
+    },
+    {
+      "id": 51,
+      "type": "VAEEncode",
+      "pos": [275, 560],
+      "size": [210, 46],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "pixels", "type": "IMAGE", "link": 11},
+        {"name": "vae", "type": "VAE", "link": 8}
+      ],
+      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [12], "slot_index": 0}],
+      "properties": {"Node name for S&R": "VAEEncode"}
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [323, 115],
+      "size": [422, 164],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [{"name": "clip", "type": "CLIP", "link": 3}],
+      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [6], "slot_index": 0}],
+      "title": "Prompt Positive (variant: hair, clothes, etc.)",
+      "properties": {"Node name for S&R": "CLIPTextEncode"},
+      "widgets_values": [
+        "same character as reference, full body, blue apron, short hair, simple flat colors, stardew valley style"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [317, 352],
+      "size": [425, 180],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [{"name": "clip", "type": "CLIP", "link": 4}],
+      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [7], "slot_index": 0}],
+      "title": "Prompt Negative",
+      "properties": {"Node name for S&R": "CLIPTextEncode"},
+      "widgets_values": [
+        "low quality, blurry, deformed, watermark, text, signature, depth of field, photoreal"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "KSampler",
+      "pos": [869, 153],
+      "size": [315, 262],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 5},
+        {"name": "positive", "type": "CONDITIONING", "link": 6},
+        {"name": "negative", "type": "CONDITIONING", "link": 7},
+        {"name": "latent_image", "type": "LATENT", "link": 12}
+      ],
+      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [13], "slot_index": 0}],
+      "title": "Img2Img KSampler (lower denoise = closer to golden)",
+      "properties": {"Node name for S&R": "KSampler"},
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        20,
+        7,
+        "euler_ancestral",
+        "karras",
+        0.42
+      ]
+    },
+    {
+      "id": 25,
+      "type": "VAEDecode",
+      "pos": [1238, 189],
+      "size": [210, 46],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {"name": "samples", "type": "LATENT", "link": 13},
+        {"name": "vae", "type": "VAE", "link": 9}
+      ],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [14, 15], "slot_index": 0}],
+      "properties": {"Node name for S&R": "VAEDecode"}
+    },
+    {
+      "id": 52,
+      "type": "SaveImage",
+      "pos": [1405, -40],
+      "size": [315, 270],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [{"name": "images", "type": "IMAGE", "link": 14}],
+      "properties": {},
+      "widgets_values": ["npc_img2img_variant_"]
+    },
+    {
+      "id": 53,
+      "type": "PreviewImage",
+      "pos": [1289, 300],
+      "size": [400, 400],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [{"name": "images", "type": "IMAGE", "link": 15}],
+      "title": "Preview variant",
+      "properties": {"Node name for S&R": "PreviewImage"}
+    }
+  ],
+  "links": [
+    [1, 4, 0, 39, 0, "MODEL"],
+    [2, 4, 1, 39, 1, "CLIP"],
+    [3, 39, 1, 6, 0, "CLIP"],
+    [4, 39, 1, 7, 0, "CLIP"],
+    [5, 39, 0, 3, 0, "MODEL"],
+    [6, 6, 0, 3, 1, "CONDITIONING"],
+    [7, 7, 0, 3, 2, "CONDITIONING"],
+    [8, 4, 2, 51, 1, "VAE"],
+    [9, 4, 2, 25, 1, "VAE"],
+    [10, 48, 0, 49, 0, "IMAGE"],
+    [11, 49, 0, 51, 0, "IMAGE"],
+    [12, 51, 0, 3, 3, "LATENT"],
+    [13, 3, 0, 25, 0, "LATENT"],
+    [14, 25, 0, 52, 0, "IMAGE"],
+    [15, 25, 0, 53, 0, "IMAGE"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

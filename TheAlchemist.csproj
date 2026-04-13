@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <RootNamespace>TheAlchemist</RootNamespace>
+    <AssemblyName>TheAlchemist</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="Content\Fonts\Roboto-Regular.ttf" />
+    <None Include="Content\Fonts\Roboto.spritefont" />
+    <None Include="Content\art\hero\hero.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <LooseEditorArt Include="Content\art\tiles\**\*.png" />
+    <LooseEditorArt Include="Content\art\tiles\**\*.jpg" />
+    <LooseEditorArt Include="Content\art\tiles\**\*.jpeg" />
+    <LooseEditorArt Include="Content\art\objects\**\*.png" />
+    <LooseEditorArt Include="Content\art\objects\**\*.jpg" />
+    <LooseEditorArt Include="Content\art\objects\**\*.jpeg" />
+    <LooseEditorArt Include="Content\art\herbs\**\*.png" />
+    <LooseEditorArt Include="Content\art\herbs\**\*.jpg" />
+    <LooseEditorArt Include="Content\art\herbs\**\*.jpeg" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.*" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.*" />
+  </ItemGroup>
+  <Target Name="RestoreDotnetTools" BeforeTargets="CollectPackageReferences">
+    <Message Text="Restoring dotnet tools" Importance="High" />
+    <Exec Command="dotnet tool restore" />
+  </Target>
+  <Target Name="CopyLooseEditorArt" AfterTargets="Build">
+    <Copy SourceFiles="@(LooseEditorArt)" DestinationFiles="@(LooseEditorArt->'$(OutDir)%(Identity)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

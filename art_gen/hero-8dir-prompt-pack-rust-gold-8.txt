@@ -1,0 +1,49 @@
+Chrono Trigger Inspired Hero 8-Direction Prompt Pack
+Palette lock is enforced by Pixel8Bit node in workflow.
+
+GLOBAL STYLE SUFFIX (append to each line if needed):
+Chrono Trigger inspired 16-bit JRPG sprite aesthetic, clean pixel clusters, crisp silhouette, centered composition, readable at 36x36, no anti-aliasing, no gradients, simple flat shading, same character design and outfit as reference
+
+NEGATIVE (recommended):
+different character, wrong costume, wrong proportions, blurry, deformed anatomy, noisy texture, smooth shading, anti-aliased edges, gradients, photoreal, painterly, extra colors outside palette
+
+IDLE - 8 DIRECTIONS
+1) N  : same hero character as reference, full body, facing north (back view), idle pose, arms relaxed, feet apart 1 pixel, retro JRPG overworld sprite
+2) NE : same hero character as reference, full body, facing northeast 3/4 back view, idle pose, readable silhouette, clear shoulder and boot separation
+3) E  : same hero character as reference, full body, facing east side view, idle pose, one eye visible profile, strong side silhouette
+4) SE : same hero character as reference, full body, facing southeast 3/4 front view, idle pose, chest and front leg slightly visible
+5) S  : same hero character as reference, full body, facing south (front view), idle pose, neutral expression, symmetrical readable stance
+6) SW : same hero character as reference, full body, facing southwest 3/4 front view, idle pose, clear arm overlap and boot readability
+7) W  : same hero character as reference, full body, facing west side view, idle pose, mirrored side-profile readability
+8) NW : same hero character as reference, full body, facing northwest 3/4 back view, idle pose, cape/hair/back details visible
+
+WALK START - 8 DIRECTIONS (frame A)
+9)  N  : same hero character as reference, full body, facing north back view, walk cycle frame A, left leg forward, right arm forward, purposeful movement
+10) NE : same hero character as reference, full body, facing northeast 3/4 back view, walk cycle frame A, front foot lifted 1 pixel
+11) E  : same hero character as reference, full body, facing east side view, walk cycle frame A, leading foot forward, arm counter-swing
+12) SE : same hero character as reference, full body, facing southeast 3/4 front view, walk cycle frame A, dynamic but clean silhouette
+13) S  : same hero character as reference, full body, facing south front view, walk cycle frame A, one foot forward, subtle arm swing
+14) SW : same hero character as reference, full body, facing southwest 3/4 front view, walk cycle frame A, readable stride pose
+15) W  : same hero character as reference, full body, facing west side view, walk cycle frame A, mirrored side stride silhouette
+16) NW : same hero character as reference, full body, facing northwest 3/4 back view, walk cycle frame A, rear shoulder and heel readable
+
+WALK PASSING - 8 DIRECTIONS (frame B)
+17) N  : same hero character as reference, full body, facing north back view, walk cycle frame B (passing), feet nearly aligned, torso centered
+18) NE : same hero character as reference, full body, facing northeast 3/4 back view, walk cycle frame B, compact transition frame
+19) E  : same hero character as reference, full body, facing east side view, walk cycle frame B passing pose, both feet near center line
+20) SE : same hero character as reference, full body, facing southeast 3/4 front view, walk cycle frame B passing pose, stable center mass
+21) S  : same hero character as reference, full body, facing south front view, walk cycle frame B passing pose, balanced neutral midpoint
+22) SW : same hero character as reference, full body, facing southwest 3/4 front view, walk cycle frame B, compact readable limb overlap
+23) W  : same hero character as reference, full body, facing west side view, walk cycle frame B passing pose, mirrored clean midpoint
+24) NW : same hero character as reference, full body, facing northwest 3/4 back view, walk cycle frame B passing pose, readable back silhouette
+
+FAST CONSISTENCY TAGS (optional add-ons)
+- same face, same hair silhouette, same outfit colors, same body proportions, same weapon placement
+- sprite sheet consistency, model sheet consistency, turn-around consistency
+- minimal pose exaggeration, production game sprite, overworld character proportions
+
+USAGE NOTES
+1) Keep denoise around 0.30-0.45 for identity consistency from your source sprite.
+2) Generate each direction separately, then clean up manually in Aseprite/LibreSprite.
+3) For W direction, you can mirror E manually if anatomy/equipment allows.
+4) For walk loops, generate A and B, then mirror/in-between by hand for perfect continuity.

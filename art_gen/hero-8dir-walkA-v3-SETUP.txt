@@ -1,0 +1,57 @@
+Workflow file (v3): hero-8dir-walkA-pose-ipadapter-rust-gold-8-queued.json
+
+Purpose
+- Eight parallel branches: each uses a DIFFERENT OpenPose control image so facing/pose can change while IP-Adapter keeps the hero closer to your reference face/outfit.
+- Still ends with GlitchNodes Pixel8Bit for your Rust Gold 8 hex palette.
+
+REQUIRED custom nodes (install via ComfyUI Manager)
+1) ComfyUI_IPAdapter_plus (cubiq)
+   - Provides: IPAdapterModelLoader, CLIPVisionLoader, PrepImageForClipVision, IPAdapterAdvanced
+2) GlitchNodes (you already have this)
+   - Provides: Pixel8Bit
+
+NOT required as a custom node pack for this graph
+- ControlNetLoader + ControlNetApplyAdvanced are ComfyUI core/built-in in current ComfyUI.
+
+REQUIRED model files (you download these yourself)
+A) Checkpoint + LoRA (same as your other workflows)
+   - models/checkpoints/sd_xl_base_1.0.safetensors
+   - models/loras/pixel-art-xl-v1.1.safetensors
+
+B) SDXL OpenPose ControlNet
+   - Put in models/controlnet/ (or your Comfy controlnet folder)
+   - Default name in the workflow: OpenPoseXL2.safetensors
+   - Source example: https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0
+
+C) IP-Adapter + CLIP Vision (must match SDXL pairing)
+   - Put IP-Adapter weights in models/ipadapter/
+   - Default in workflow: ip-adapter-plus-face_sdxl_vit-h.safetensors
+     If that exact file is not on disk, pick the SDXL face-capable file you have and select it in the node.
+   - Put CLIP Vision in models/clip_vision/
+   - Default in workflow: CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors
+     If your menu shows a different filename, select the one that matches your IP-Adapter download instructions.
+
+Input images you must supply
+1) Hero reference (identity + img2img source)
+   - Place file next to Comfy input folder OR use Load Image picker
+   - Default filename in node: hero_reference.png
+   - Use the same hero you like; 1024x1024 or larger is fine (workflow scales to 1024).
+
+2) Eight OpenPose preview images (one per direction)
+   - Expected paths in Load Image nodes: poses/openpose_N.png ... poses/openpose_NW.png
+   - These should be the ORANGE SKELETON OpenPose preprocessor outputs (not a raw photo).
+   - Resolution: 1024x1024 recommended to match the latent.
+
+How to create the eight pose images (pick one)
+- Use ComfyUI "ControlNet Auxiliary Preprocessors" (Fannovel16) or A1111 ControlNet OpenPose preprocessor,
+  then export/save each direction as PNG.
+- Or draw simple stick figures in your art tool if they read as valid OpenPose maps (harder).
+
+Tuning knobs if face still drifts
+- IPAdapterAdvanced weight: try 0.65 - 0.85 (lower = less face lock, higher = stronger lock but may fight pose)
+- KSampler denoise: try 0.45 - 0.58
+- ControlNet strength on each branch: try 0.75 - 1.0
+
+Regenerating the JSON
+- Edit constants at top of: art_gen/_gen_hero_8dir_pose_ipa_workflow.py
+- Run: python art_gen/_gen_hero_8dir_pose_ipa_workflow.py

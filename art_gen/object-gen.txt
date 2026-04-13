@@ -1,0 +1,21 @@
+
+Pos ::
+
+pixel art, 
+
+a tree stump
+
+no objects or obstructions,
+
+3/4 view, SNES JRPG style, crisp silhouette, readable sprites, hand-placed pixels, no anti-aliasing, simple flat shading, retro fantasy detail,
+
+Chrono Trigger-inspired mood, 16-bit SNES JRPG sensibility, adventurous, slightly mystical
+pixel-perfect edges, no anti-aliasing, no gradient, flat clusters, clean color grouping,
+readable at 36x36 and 64x64,
+game-ready sprite / tile-ready,
+
+
+
+Neg ::
+
+low quality, blurry, deformed, watermark, text, signature, depth of field, photoreal, gradients, smooth shading, anti-aliased edges, extra colors, colors outside palette, hue variation outside palette, modern UI, vector look, painterly brushwork, photoreal, noisy texture, excessive detail, blurry edges, soft focus, banding from gradients

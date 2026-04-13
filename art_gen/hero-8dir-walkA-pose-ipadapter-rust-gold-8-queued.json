@@ -1,0 +1,3984 @@
+{
+  "last_node_id": 907,
+  "last_link_id": 115,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        -820,
+        180
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            6,
+            22,
+            35,
+            48,
+            61,
+            74,
+            87,
+            100,
+            113
+          ],
+          "slot_index": 2
+        }
+      ],
+      "title": "Load Base Safetensors",
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "sd_xl_base_1.0.safetensors"
+      ]
+    },
+    {
+      "id": 39,
+      "type": "LoraLoader",
+      "pos": [
+        -460,
+        180
+      ],
+      "size": [
+        315,
+        126
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            8
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            3,
+            12,
+            25,
+            38,
+            51,
+            64,
+            77,
+            90,
+            103
+          ],
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "pixel-art-xl-v1.1.safetensors",
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -460,
+        360
+      ],
+      "size": [
+        520,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            14,
+            27,
+            40,
+            53,
+            66,
+            79,
+            92,
+            105
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt Negative (shared)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "different character, wrong face, face drift, asymmetrical face swap, low quality, blurry, deformed, watermark, text, signature, depth of field, photoreal, smooth shading, gradients, anti-aliased edges, noisy texture, extra colors outside palette, wrong facing direction, wrong pose"
+      ]
+    },
+    {
+      "id": 48,
+      "type": "LoadImage",
+      "pos": [
+        -820,
+        340
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Hero reference (identity + img2img)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "hero_reference.png",
+        "image"
+      ]
+    },
+    {
+      "id": 49,
+      "type": "ImageScale",
+      "pos": [
+        -460,
+        420
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            5,
+            7
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Hero 1024 (match latent)",
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "nearest-exact",
+        1024,
+        1024,
+        "disabled"
+      ]
+    },
+    {
+      "id": 51,
+      "type": "VAEEncode",
+      "pos": [
+        -100,
+        420
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            20,
+            33,
+            46,
+            59,
+            72,
+            85,
+            98,
+            111
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEEncode"
+      }
+    },
+    {
+      "id": 15,
+      "type": "IPAdapterModelLoader",
+      "pos": [
+        -820,
+        -120
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IPADAPTER",
+          "type": "IPADAPTER",
+          "links": [
+            9
+          ],
+          "shape": 3
+        }
+      ],
+      "title": "IP-Adapter model (SDXL)",
+      "properties": {
+        "Node name for S&R": "IPAdapterModelLoader"
+      },
+      "widgets_values": [
+        "ip-adapter-plus-face_sdxl_vit-h.safetensors"
+      ]
+    },
+    {
+      "id": 16,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        -820,
+        -30
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": [
+            11
+          ],
+          "shape": 3
+        }
+      ],
+      "title": "CLIP Vision (match IP-Adapter)",
+      "properties": {
+        "Node name for S&R": "CLIPVisionLoader"
+      },
+      "widgets_values": [
+        "CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "PrepImageForClipVision",
+      "pos": [
+        -460,
+        -80
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            10
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "title": "Prep hero for IP-Adapter",
+      "properties": {
+        "Node name for S&R": "PrepImageForClipVision"
+      },
+      "widgets_values": [
+        "LANCZOS",
+        "center",
+        0.12
+      ]
+    },
+    {
+      "id": 14,
+      "type": "IPAdapterAdvanced",
+      "pos": [
+        -100,
+        -60
+      ],
+      "size": [
+        315,
+        278
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 8
+        },
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": 9
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 10
+        },
+        {
+          "name": "image_negative",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "attn_mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            17,
+            30,
+            43,
+            56,
+            69,
+            82,
+            95,
+            108
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "title": "IP-Adapter (lock identity)",
+      "properties": {
+        "Node name for S&R": "IPAdapterAdvanced"
+      },
+      "widgets_values": [
+        0.72,
+        "linear",
+        "concat",
+        0.0,
+        1.0,
+        "K+V"
+      ]
+    },
+    {
+      "id": 203,
+      "type": "ControlNetLoader",
+      "pos": [
+        200,
+        -140
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            15,
+            28,
+            41,
+            54,
+            67,
+            80,
+            93,
+            106
+          ],
+          "shape": 3
+        }
+      ],
+      "title": "ControlNet OpenPose XL",
+      "properties": {
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "OpenPoseXL2.safetensors"
+      ]
+    },
+    {
+      "id": 300,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        120
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            16
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose N (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_N.png",
+        "image"
+      ]
+    },
+    {
+      "id": 400,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        120
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            13
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + N",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing north, back view only, facing away from camera, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction N"
+      ]
+    },
+    {
+      "id": 500,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        120
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 13
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 14
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 15
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            18
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            19
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> N",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 600,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        120
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 17
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 18
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 19
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            21
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler N",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 700,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        160
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 21
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            23
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 800,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        140
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 70,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            24
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette N",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 900,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        140
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 80,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 24
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_N_"
+      ]
+    },
+    {
+      "id": 301,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        430
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            29
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose NE (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_NE.png",
+        "image"
+      ]
+    },
+    {
+      "id": 401,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        430
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            26
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + NE",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing northeast diagonal, 3/4 back view only, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction NE"
+      ]
+    },
+    {
+      "id": 501,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        430
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 26
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 27
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 28
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            31
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            32
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> NE",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 601,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        430
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 30
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 31
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 32
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            34
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler NE",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 701,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        470
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 61,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 34
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            36
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 801,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        450
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 71,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 36
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            37
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette NE",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 901,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        450
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 81,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 37
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_NE_"
+      ]
+    },
+    {
+      "id": 302,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        740
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            42
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose E (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_E.png",
+        "image"
+      ]
+    },
+    {
+      "id": 402,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        740
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            39
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + E",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing east, strict right side profile only, one eye visible, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction E"
+      ]
+    },
+    {
+      "id": 502,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        740
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 39
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 40
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 41
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 42
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            44
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            45
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> E",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 602,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        740
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 43
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 44
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 45
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            47
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler E",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 702,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        780
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 62,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 47
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            49
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 802,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        760
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 72,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 49
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            50
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette E",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 902,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        760
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 82,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 50
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_E_"
+      ]
+    },
+    {
+      "id": 303,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        1050
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            55
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose SE (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_SE.png",
+        "image"
+      ]
+    },
+    {
+      "id": 403,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        1050
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 51
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            52
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + SE",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing southeast diagonal, 3/4 front view only, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction SE"
+      ]
+    },
+    {
+      "id": 503,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        1050
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 52
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 53
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 54
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 55
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            57
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            58
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> SE",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 603,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        1050
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 53,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 56
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 57
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 58
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 59
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            60
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler SE",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 703,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        1090
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 63,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 60
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 61
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            62
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 803,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        1070
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 73,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 62
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            63
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette SE",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 903,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        1070
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 83,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 63
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_SE_"
+      ]
+    },
+    {
+      "id": 304,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        1360
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            68
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose S (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_S.png",
+        "image"
+      ]
+    },
+    {
+      "id": 404,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        1360
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 64
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            65
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + S",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing south, front view only, facing camera, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction S"
+      ]
+    },
+    {
+      "id": 504,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        1360
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 65
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 66
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 67
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 68
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            70
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            71
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> S",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 604,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        1360
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 69
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 70
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 71
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 72
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            73
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler S",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 704,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        1400
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 64,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 73
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            75
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 804,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        1380
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 74,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            76
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette S",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 904,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        1380
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 84,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 76
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_S_"
+      ]
+    },
+    {
+      "id": 305,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        1670
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            81
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose SW (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_SW.png",
+        "image"
+      ]
+    },
+    {
+      "id": 405,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        1670
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 77
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            78
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + SW",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing southwest diagonal, 3/4 front view only, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction SW"
+      ]
+    },
+    {
+      "id": 505,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        1670
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 78
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 79
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 80
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 81
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            83
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            84
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> SW",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 605,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        1670
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 82
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 83
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 84
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 85
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            86
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler SW",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 705,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        1710
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 65,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 86
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 87
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            88
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 805,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        1690
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 75,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 88
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            89
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette SW",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 905,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        1690
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 85,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 89
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_SW_"
+      ]
+    },
+    {
+      "id": 306,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        1980
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            94
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose W (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_W.png",
+        "image"
+      ]
+    },
+    {
+      "id": 406,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        1980
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 90
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            91
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + W",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing west, strict left side profile only, one eye visible, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction W"
+      ]
+    },
+    {
+      "id": 506,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        1980
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 91
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 92
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 93
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 94
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            96
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            97
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> W",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 606,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        1980
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 95
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 96
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 97
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 98
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            99
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler W",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 706,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        2020
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 66,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 99
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 100
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            101
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 806,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        2000
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 76,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 101
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            102
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette W",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 906,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        2000
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 86,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 102
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_W_"
+      ]
+    },
+    {
+      "id": 307,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        2290
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            107
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "title": "Pose NW (OpenPose preview)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "poses/openpose_NW.png",
+        "image"
+      ]
+    },
+    {
+      "id": 407,
+      "type": "CLIPTextEncode",
+      "pos": [
+        340,
+        2290
+      ],
+      "size": [
+        480,
+        140
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 103
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            104
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Prompt + NW",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "same hero character as reference image, preserve face and identity, full body, walk cycle frame A, facing northwest diagonal, 3/4 back view only, ONLY this orientation, match openpose skeleton exactly, Chrono Trigger inspired 16-bit JRPG sprite, clean pixel clusters, crisp silhouette, no anti-aliasing, simple flat shading, readable at 36x36, direction NW"
+      ]
+    },
+    {
+      "id": 507,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        880,
+        2290
+      ],
+      "size": [
+        315,
+        186
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 104
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 105
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 106
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 107
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            109
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            110
+          ],
+          "slot_index": 1
+        }
+      ],
+      "title": "OpenPose -> NW",
+      "properties": {
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        0.88,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": 607,
+      "type": "KSampler",
+      "pos": [
+        1240,
+        2290
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 108
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 109
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 110
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 111
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            112
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "KSampler NW",
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1073741824,
+        "randomize",
+        24,
+        7.0,
+        "euler_ancestral",
+        "karras",
+        0.52
+      ]
+    },
+    {
+      "id": 707,
+      "type": "VAEDecode",
+      "pos": [
+        1600,
+        2330
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 67,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 112
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 113
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            114
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 807,
+      "type": "Pixel8Bit",
+      "pos": [
+        1860,
+        2310
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 77,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 114
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            115
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Palette NW",
+      "properties": {
+        "Node name for S&R": "Pixel8Bit"
+      },
+      "widgets_values": [
+        1,
+        "Fixed Palette",
+        "Custom",
+        "#f6cd26,#ac6b26,#563226,#331c17,#bb7f57,#725956,#393939,#202020",
+        8,
+        "None",
+        4,
+        8,
+        1
+      ]
+    },
+    {
+      "id": 907,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        2310
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 87,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 115
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "hero_pose_ipa_walkA_NW_"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      4,
+      0,
+      39,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      4,
+      1,
+      39,
+      1,
+      "CLIP"
+    ],
+    [
+      3,
+      39,
+      1,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      4,
+      48,
+      0,
+      49,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      49,
+      0,
+      51,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      2,
+      51,
+      1,
+      "VAE"
+    ],
+    [
+      7,
+      49,
+      0,
+      17,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      39,
+      0,
+      14,
+      0,
+      "MODEL"
+    ],
+    [
+      9,
+      15,
+      0,
+      14,
+      1,
+      "IPADAPTER"
+    ],
+    [
+      10,
+      17,
+      0,
+      14,
+      2,
+      "IMAGE"
+    ],
+    [
+      11,
+      16,
+      0,
+      14,
+      5,
+      "CLIP_VISION"
+    ],
+    [
+      12,
+      39,
+      1,
+      400,
+      0,
+      "CLIP"
+    ],
+    [
+      13,
+      400,
+      0,
+      500,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      7,
+      0,
+      500,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      15,
+      203,
+      0,
+      500,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      16,
+      300,
+      0,
+      500,
+      3,
+      "IMAGE"
+    ],
+    [
+      17,
+      14,
+      0,
+      600,
+      0,
+      "MODEL"
+    ],
+    [
+      18,
+      500,
+      0,
+      600,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      19,
+      500,
+      1,
+      600,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      20,
+      51,
+      0,
+      600,
+      3,
+      "LATENT"
+    ],
+    [
+      21,
+      600,
+      0,
+      700,
+      0,
+      "LATENT"
+    ],
+    [
+      22,
+      4,
+      2,
+      700,
+      1,
+      "VAE"
+    ],
+    [
+      23,
+      700,
+      0,
+      800,
+      0,
+      "IMAGE"
+    ],
+    [
+      24,
+      800,
+      0,
+      900,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      39,
+      1,
+      401,
+      0,
+      "CLIP"
+    ],
+    [
+      26,
+      401,
+      0,
+      501,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      27,
+      7,
+      0,
+      501,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      28,
+      203,
+      0,
+      501,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      29,
+      301,
+      0,
+      501,
+      3,
+      "IMAGE"
+    ],
+    [
+      30,
+      14,
+      0,
+      601,
+      0,
+      "MODEL"
+    ],
+    [
+      31,
+      501,
+      0,
+      601,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      32,
+      501,
+      1,
+      601,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      33,
+      51,
+      0,
+      601,
+      3,
+      "LATENT"
+    ],
+    [
+      34,
+      601,
+      0,
+      701,
+      0,
+      "LATENT"
+    ],
+    [
+      35,
+      4,
+      2,
+      701,
+      1,
+      "VAE"
+    ],
+    [
+      36,
+      701,
+      0,
+      801,
+      0,
+      "IMAGE"
+    ],
+    [
+      37,
+      801,
+      0,
+      901,
+      0,
+      "IMAGE"
+    ],
+    [
+      38,
+      39,
+      1,
+      402,
+      0,
+      "CLIP"
+    ],
+    [
+      39,
+      402,
+      0,
+      502,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      40,
+      7,
+      0,
+      502,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      41,
+      203,
+      0,
+      502,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      42,
+      302,
+      0,
+      502,
+      3,
+      "IMAGE"
+    ],
+    [
+      43,
+      14,
+      0,
+      602,
+      0,
+      "MODEL"
+    ],
+    [
+      44,
+      502,
+      0,
+      602,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      45,
+      502,
+      1,
+      602,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      46,
+      51,
+      0,
+      602,
+      3,
+      "LATENT"
+    ],
+    [
+      47,
+      602,
+      0,
+      702,
+      0,
+      "LATENT"
+    ],
+    [
+      48,
+      4,
+      2,
+      702,
+      1,
+      "VAE"
+    ],
+    [
+      49,
+      702,
+      0,
+      802,
+      0,
+      "IMAGE"
+    ],
+    [
+      50,
+      802,
+      0,
+      902,
+      0,
+      "IMAGE"
+    ],
+    [
+      51,
+      39,
+      1,
+      403,
+      0,
+      "CLIP"
+    ],
+    [
+      52,
+      403,
+      0,
+      503,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      53,
+      7,
+      0,
+      503,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      54,
+      203,
+      0,
+      503,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      55,
+      303,
+      0,
+      503,
+      3,
+      "IMAGE"
+    ],
+    [
+      56,
+      14,
+      0,
+      603,
+      0,
+      "MODEL"
+    ],
+    [
+      57,
+      503,
+      0,
+      603,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      58,
+      503,
+      1,
+      603,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      59,
+      51,
+      0,
+      603,
+      3,
+      "LATENT"
+    ],
+    [
+      60,
+      603,
+      0,
+      703,
+      0,
+      "LATENT"
+    ],
+    [
+      61,
+      4,
+      2,
+      703,
+      1,
+      "VAE"
+    ],
+    [
+      62,
+      703,
+      0,
+      803,
+      0,
+      "IMAGE"
+    ],
+    [
+      63,
+      803,
+      0,
+      903,
+      0,
+      "IMAGE"
+    ],
+    [
+      64,
+      39,
+      1,
+      404,
+      0,
+      "CLIP"
+    ],
+    [
+      65,
+      404,
+      0,
+      504,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      66,
+      7,
+      0,
+      504,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      67,
+      203,
+      0,
+      504,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      68,
+      304,
+      0,
+      504,
+      3,
+      "IMAGE"
+    ],
+    [
+      69,
+      14,
+      0,
+      604,
+      0,
+      "MODEL"
+    ],
+    [
+      70,
+      504,
+      0,
+      604,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      71,
+      504,
+      1,
+      604,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      72,
+      51,
+      0,
+      604,
+      3,
+      "LATENT"
+    ],
+    [
+      73,
+      604,
+      0,
+      704,
+      0,
+      "LATENT"
+    ],
+    [
+      74,
+      4,
+      2,
+      704,
+      1,
+      "VAE"
+    ],
+    [
+      75,
+      704,
+      0,
+      804,
+      0,
+      "IMAGE"
+    ],
+    [
+      76,
+      804,
+      0,
+      904,
+      0,
+      "IMAGE"
+    ],
+    [
+      77,
+      39,
+      1,
+      405,
+      0,
+      "CLIP"
+    ],
+    [
+      78,
+      405,
+      0,
+      505,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      79,
+      7,
+      0,
+      505,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      80,
+      203,
+      0,
+      505,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      81,
+      305,
+      0,
+      505,
+      3,
+      "IMAGE"
+    ],
+    [
+      82,
+      14,
+      0,
+      605,
+      0,
+      "MODEL"
+    ],
+    [
+      83,
+      505,
+      0,
+      605,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      84,
+      505,
+      1,
+      605,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      85,
+      51,
+      0,
+      605,
+      3,
+      "LATENT"
+    ],
+    [
+      86,
+      605,
+      0,
+      705,
+      0,
+      "LATENT"
+    ],
+    [
+      87,
+      4,
+      2,
+      705,
+      1,
+      "VAE"
+    ],
+    [
+      88,
+      705,
+      0,
+      805,
+      0,
+      "IMAGE"
+    ],
+    [
+      89,
+      805,
+      0,
+      905,
+      0,
+      "IMAGE"
+    ],
+    [
+      90,
+      39,
+      1,
+      406,
+      0,
+      "CLIP"
+    ],
+    [
+      91,
+      406,
+      0,
+      506,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      92,
+      7,
+      0,
+      506,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      93,
+      203,
+      0,
+      506,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      94,
+      306,
+      0,
+      506,
+      3,
+      "IMAGE"
+    ],
+    [
+      95,
+      14,
+      0,
+      606,
+      0,
+      "MODEL"
+    ],
+    [
+      96,
+      506,
+      0,
+      606,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      97,
+      506,
+      1,
+      606,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      98,
+      51,
+      0,
+      606,
+      3,
+      "LATENT"
+    ],
+    [
+      99,
+      606,
+      0,
+      706,
+      0,
+      "LATENT"
+    ],
+    [
+      100,
+      4,
+      2,
+      706,
+      1,
+      "VAE"
+    ],
+    [
+      101,
+      706,
+      0,
+      806,
+      0,
+      "IMAGE"
+    ],
+    [
+      102,
+      806,
+      0,
+      906,
+      0,
+      "IMAGE"
+    ],
+    [
+      103,
+      39,
+      1,
+      407,
+      0,
+      "CLIP"
+    ],
+    [
+      104,
+      407,
+      0,
+      507,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      105,
+      7,
+      0,
+      507,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      106,
+      203,
+      0,
+      507,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      107,
+      307,
+      0,
+      507,
+      3,
+      "IMAGE"
+    ],
+    [
+      108,
+      14,
+      0,
+      607,
+      0,
+      "MODEL"
+    ],
+    [
+      109,
+      507,
+      0,
+      607,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      110,
+      507,
+      1,
+      607,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      111,
+      51,
+      0,
+      607,
+      3,
+      "LATENT"
+    ],
+    [
+      112,
+      607,
+      0,
+      707,
+      0,
+      "LATENT"
+    ],
+    [
+      113,
+      4,
+      2,
+      707,
+      1,
+      "VAE"
+    ],
+    [
+      114,
+      707,
+      0,
+      807,
+      0,
+      "IMAGE"
+    ],
+    [
+      115,
+      807,
+      0,
+      907,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}
