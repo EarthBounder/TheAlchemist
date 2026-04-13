@@ -224,6 +224,26 @@ public static class CampaignLoader
             }
 
             segment.Lines ??= new List<DialogueLine>();
+            if (segment.SpeakerPortraits == null)
+                segment.SpeakerPortraits = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            else
+            {
+                var norm = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kv in segment.SpeakerPortraits)
+                    norm[kv.Key] = kv.Value;
+                segment.SpeakerPortraits = norm;
+            }
+
+            foreach (DialogueLine ln in segment.Lines)
+            {
+                if (string.IsNullOrWhiteSpace(ln.Speaker))
+                    continue;
+                if (!DialoguePortraitPaths.HasPortraitDefined(segment, ln))
+                {
+                    error = $"{path}: speaker \"{ln.Speaker}\" needs a \"portrait\" on the line or \"speakerPortraits\" in the segment.";
+                    return false;
+                }
+            }
 
             error = null;
             return true;

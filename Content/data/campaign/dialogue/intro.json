@@ -1,5 +1,8 @@
 {
   "schema": 1,
+  "speakerPortraits": {
+    "Narrator": "narrator.png"
+  },
   "lines": [
     { "speaker": "Narrator", "text": "The road to the workshop is long." },
     { "text": "Your first mission waits in the valley." }

@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace TheAlchemist.World;
 
-/// <summary>Loads every image in <c>Content/art/{tiles|objects|herbs}/</c> from disk (no MGCB entry per file).</summary>
+/// <summary>Loads every image in <c>Content/art/{tiles|objects|herbs|portraits}/</c> from disk (no MGCB entry per file).</summary>
 public static class EditorLooseArtLoader
 {
     public static string ArtRoot => Path.Combine(AppContext.BaseDirectory, "Content", "art");

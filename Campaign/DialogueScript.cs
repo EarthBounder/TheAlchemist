@@ -12,6 +12,9 @@ public sealed class DialogueLine
 
     public string Text { get; set; } = "";
 
+    /// <summary>Optional portrait image under <c>Content/art/portraits</c> (filename or nested path). Overrides segment map for this line.</summary>
+    public string Portrait { get; set; }
+
     /// <summary>Extra JSON keys preserved for future tools.</summary>
     [JsonExtensionData]
     public Dictionary<string, JsonElement> ExtensionData { get; set; }
@@ -21,6 +24,9 @@ public sealed class DialogueLine
 public sealed class DialogueSegment
 {
     public int Schema { get; set; } = 1;
+
+    /// <summary>Speaker label to portrait file under <c>Content/art/portraits</c> (e.g. <c>Narrator</c> -> <c>narrator.png</c>).</summary>
+    public Dictionary<string, string> SpeakerPortraits { get; set; }
 
     public List<DialogueLine> Lines { get; set; } = new();
 

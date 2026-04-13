@@ -26,6 +26,9 @@
     <LooseEditorArt Include="Content\art\herbs\**\*.png" />
     <LooseEditorArt Include="Content\art\herbs\**\*.jpg" />
     <LooseEditorArt Include="Content\art\herbs\**\*.jpeg" />
+    <LooseEditorArt Include="Content\art\portraits\**\*.png" />
+    <LooseEditorArt Include="Content\art\portraits\**\*.jpg" />
+    <LooseEditorArt Include="Content\art\portraits\**\*.jpeg" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.WindowsDesktop.App" />

@@ -1,5 +1,8 @@
 {
   "schema": 1,
+  "speakerPortraits": {
+    "Narrator": "narrator.png"
+  },
   "lines": [
     { "speaker": "Narrator", "text": "Two maps lie behind you now." },
     { "text": "The journey nears its close." }
