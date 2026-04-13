@@ -20,7 +20,7 @@ public sealed class EditorMapData
     public string[] Objects { get; set; } = Array.Empty<string>();
     public string[] Herbs { get; set; } = Array.Empty<string>();
 
-    /// <summary>When false, hero cannot enter (unless blocked by object/water regardless).</summary>
+    /// <summary>When false, hero cannot enter. Object tiles are forced false in <see cref="NormalizeInPlace"/>.</summary>
     public bool[] Walkable { get; set; } = Array.Empty<bool>();
 
     /// <summary>Optional absolute path to a background image shown under the grid in the editor.</summary>
@@ -168,6 +168,13 @@ public sealed class EditorMapData
         {
             if (Herbs[i] == null)
                 Herbs[i] = "";
+        }
+
+        int ow = Math.Min(Objects.Length, Walkable.Length);
+        for (int i = 0; i < ow; i++)
+        {
+            if (!string.IsNullOrEmpty(Objects[i]))
+                Walkable[i] = false;
         }
     }
 

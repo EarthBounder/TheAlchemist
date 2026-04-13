@@ -14,6 +14,7 @@
     <None Include="Content\Fonts\Roboto-Regular.ttf" />
     <None Include="Content\Fonts\Roboto.spritefont" />
     <None Include="Content\art\hero\hero.png" />
+    <None Include="Content\data\campaign\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <LooseEditorArt Include="Content\art\tiles\**\*.png" />

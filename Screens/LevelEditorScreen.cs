@@ -731,7 +731,12 @@ public sealed class LevelEditorScreen : IGameScreen
                 break;
             case PaletteKind.Objects:
                 if (_objectIds.Count > 0)
-                    _map.Objects[i] = _objectIds[_objectBrush];
+                {
+                    string oid = _objectIds[_objectBrush];
+                    _map.Objects[i] = oid;
+                    if (!string.IsNullOrEmpty(oid))
+                        _map.Walkable[i] = false;
+                }
                 break;
             case PaletteKind.Herbs:
                 if (_herbIds.Count > 0)
@@ -1079,6 +1084,10 @@ public sealed class LevelEditorScreen : IGameScreen
                     Vector2.Zero, 0.42f, SpriteEffects.None, 0f);
                 return;
             }
+
+            spriteBatch.DrawString(font, "Props clear walk on tile", new Vector2(12, y), pal.PrimaryWhite * 0.78f, 0f,
+                Vector2.Zero, 0.38f, SpriteEffects.None, 0f);
+            y += 22;
 
             for (int i = 0; i < _objectIds.Count; i++)
             {
