@@ -32,6 +32,7 @@ public sealed class LevelEditorScreen : IGameScreen
     private const int PaletteListTop = PaletteViewTabY + 28 + 8;
     private const int GridOriginX = 236;
     private const int GridOriginY = TopChromeHeight + 12;
+    private const int UndoStackMax = 10;
 
     private Rectangle _palSaveAs;
     private Rectangle _palLoadBg;
@@ -69,6 +70,12 @@ public sealed class LevelEditorScreen : IGameScreen
     private bool _saveAsActive;
     private string _saveAsBuffer = "";
     private float _viewZoom = 1f;
+    private bool _hasHoverTile;
+    private int _hoverTileX;
+    private int _hoverTileY;
+
+    /// <summary>Map snapshots before each paint/erase gesture (max <see cref="UndoStackMax"/>).</summary>
+    private readonly List<EditorMapData> _undoStack = new();
 
     private float CellDrawPixels => ProcTileMap.TileSizePixels * _viewZoom;
 
@@ -183,6 +190,7 @@ public sealed class LevelEditorScreen : IGameScreen
         }
 
         ReloadBackgroundTexture();
+        ClearUndoStack();
     }
 
     private void TryPickBackgroundImage()
@@ -297,6 +305,7 @@ public sealed class LevelEditorScreen : IGameScreen
             var fresh = EditorMapData.CreateEmpty(ProcTileMap.WidthTiles, ProcTileMap.HeightTiles);
             CopyMap(fresh, _map);
             ReloadBackgroundTexture();
+            ClearUndoStack();
             SetStatus("New map (cleared).");
         }
         else if (_tbRun.Contains(mx, my))
@@ -403,6 +412,7 @@ public sealed class LevelEditorScreen : IGameScreen
 
         if (_saveAsActive)
         {
+            _hasHoverTile = false;
             UpdateSaveAsDialog(kb);
             _keysWas = kb;
             _mouseWas = ms;
@@ -414,6 +424,9 @@ public sealed class LevelEditorScreen : IGameScreen
             _game.ShowMainMenu();
             return;
         }
+
+        if (ctrlHeld && !shiftHeld && keyPressed(Keys.Z))
+            TryUndo();
 
         if (keyPressed(Keys.D1) || keyPressed(Keys.NumPad1))
             _paletteKind = PaletteKind.Tiles;
@@ -431,6 +444,7 @@ public sealed class LevelEditorScreen : IGameScreen
             var fresh = EditorMapData.CreateEmpty(ProcTileMap.WidthTiles, ProcTileMap.HeightTiles);
             CopyMap(fresh, _map);
             ReloadBackgroundTexture();
+            ClearUndoStack();
             SetStatus("New map (cleared).");
         }
 
@@ -513,19 +527,55 @@ public sealed class LevelEditorScreen : IGameScreen
             bool left = ms.LeftButton == ButtonState.Pressed;
             bool right = ms.RightButton == ButtonState.Pressed;
             bool leftEdge = left && _mouseWas.LeftButton == ButtonState.Released;
+            bool rightEdge = right && _mouseWas.RightButton == ButtonState.Released;
             if (TryGetTileAtPointer(input.PointerVirtual, out int tx, out int ty))
             {
                 if (left && (leftEdge || !input.PointerPressed))
+                {
+                    if (leftEdge)
+                        PushUndoSnapshot();
                     ApplyBrush(tx, ty);
+                }
+
                 if (right)
+                {
+                    if (rightEdge)
+                        PushUndoSnapshot();
                     EraseAt(tx, ty);
+                }
             }
         }
+
+        _hasHoverTile = _paletteKind != PaletteKind.View &&
+                        TryGetTileAtPointer(input.PointerVirtual, out _hoverTileX, out _hoverTileY);
 
         ClampBrushes();
 
         _keysWas = kb;
         _mouseWas = ms;
+    }
+
+    private void ClearUndoStack() => _undoStack.Clear();
+
+    private void PushUndoSnapshot()
+    {
+        _undoStack.Add(EditorMapData.Clone(_map));
+        while (_undoStack.Count > UndoStackMax)
+            _undoStack.RemoveAt(0);
+    }
+
+    private void TryUndo()
+    {
+        if (_undoStack.Count == 0)
+        {
+            SetStatus("Nothing to undo.");
+            return;
+        }
+
+        EditorMapData snap = _undoStack[^1];
+        _undoStack.RemoveAt(_undoStack.Count - 1);
+        CopyMap(snap, _map);
+        ReloadBackgroundTexture();
     }
 
     private static void CopyMap(EditorMapData from, EditorMapData to)
@@ -728,6 +778,29 @@ public sealed class LevelEditorScreen : IGameScreen
         sxI + cellWidth >= PaletteWidth && syI + cellWidth >= TopChromeHeight && sxI <= GameConfig.DesignWidth &&
         syI <= GameConfig.DesignHeight;
 
+    private void GetHoverFootprintSizeTiles(out int wTiles, out int hTiles)
+    {
+        wTiles = 1;
+        hTiles = 1;
+        Texture2D tex = null;
+        if (_paletteKind == PaletteKind.Objects && _objectIds.Count > 0)
+        {
+            string id = _objectIds[_objectBrush];
+            _objectTex.TryGetValue(id, out tex);
+        }
+        else if (_paletteKind == PaletteKind.Herbs && _herbIds.Count > 0)
+        {
+            string id = _herbIds[_herbBrush];
+            _herbTex.TryGetValue(id, out tex);
+        }
+
+        if (tex == null)
+            return;
+
+        wTiles = Math.Max(1, (int)Math.Ceiling(tex.Width / (float)ProcTileMap.TileSizePixels));
+        hTiles = Math.Max(1, (int)Math.Ceiling(tex.Height / (float)ProcTileMap.TileSizePixels));
+    }
+
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
     {
         var font = _game.UiFont;
@@ -829,6 +902,35 @@ public sealed class LevelEditorScreen : IGameScreen
             }
         }
 
+        if (_hasHoverTile && _paletteKind != PaletteKind.View)
+        {
+            GetHoverFootprintSizeTiles(out int fpw, out int fph);
+            var hoverFill = _paletteKind == PaletteKind.Walk ? new Color(0.45f, 1f, 0.55f, 0.30f) : pal.Accent * 0.28f;
+            var hoverBorder = _paletteKind == PaletteKind.Walk ? new Color(0.58f, 1f, 0.70f, 0.85f) : pal.Accent;
+            int edge = Math.Max(1, Math.Min(2, cw / 6));
+
+            for (int oy = 0; oy < fph; oy++)
+            for (int ox = 0; ox < fpw; ox++)
+            {
+                int tx = _hoverTileX + ox;
+                int ty = _hoverTileY + oy;
+                if (!_map.Contains(tx, ty))
+                    continue;
+
+                int sxI = (int)Math.Floor(GridOriginX + _viewPan.X + tx * cellPx);
+                int syI = (int)Math.Floor(GridOriginY + _viewPan.Y + ty * cellPx);
+                if (!IsMapCellVisibleInDesign(sxI, syI, cw))
+                    continue;
+
+                var cell = new Rectangle(sxI, syI, cw, cw);
+                spriteBatch.Draw(pixel, cell, hoverFill);
+                spriteBatch.Draw(pixel, new Rectangle(sxI, syI, cw, edge), hoverBorder);
+                spriteBatch.Draw(pixel, new Rectangle(sxI, syI + cw - edge, cw, edge), hoverBorder);
+                spriteBatch.Draw(pixel, new Rectangle(sxI, syI, edge, cw), hoverBorder);
+                spriteBatch.Draw(pixel, new Rectangle(sxI + cw - edge, syI, edge, cw), hoverBorder);
+            }
+        }
+
         spriteBatch.Draw(pixel, new Rectangle(PaletteWidth, 0, 2, GameConfig.DesignHeight),
             pal.ButtonBorder * 0.5f);
 
@@ -842,7 +944,7 @@ public sealed class LevelEditorScreen : IGameScreen
 
         string hint = _paletteKind == PaletteKind.View
             ? "View: wheel=zoom  Shift+wheel=pan H  mid-drag=pan  arrows/WASD=move  +/-=zoom  |  pick another tab to edit"
-            : "Save As: Ctrl+Shift+S or F7  |  Load Bg: Ctrl+Shift+B  |  1-5 tabs  |  LMB/RMB  |  pan  |  F5/F6/F4  |  Esc menu";
+            : "Save As: Ctrl+Shift+S or F7  |  Load Bg: Ctrl+Shift+B  |  Ctrl+Z undo (10)  |  1-5 tabs  |  LMB/RMB  |  pan  |  F5/F6/F4  |  Esc menu";
         spriteBatch.DrawString(font, hint, new Vector2(8, GameConfig.DesignHeight - 52), pal.PrimaryWhite, 0f,
             Vector2.Zero, 0.55f, SpriteEffects.None, 0f);
         spriteBatch.DrawString(font, $"Slot {_slot:D2}  ->  {MapFileStore.PathForSlot(_slot)}", new Vector2(8, GameConfig.DesignHeight - 30),
