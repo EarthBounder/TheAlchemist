@@ -54,7 +54,10 @@ public sealed class LoadedCampaign
         map = null;
         if ((uint)missionIndex >= (uint)Missions.Count)
             return false;
-        return MapFileStore.TryLoad(Missions[missionIndex].MapSlot, out map);
+        MissionDefinition m = Missions[missionIndex];
+        if (!string.IsNullOrWhiteSpace(m.MapFile))
+            return MapFileStore.TryLoadMapFile(m.MapFile, out map);
+        return MapFileStore.TryLoad(m.MapSlot, out map);
     }
 
     /// <summary>Intro, interlude, or outro dialogue for a flow beat index; false on mission beats.</summary>
@@ -185,9 +188,18 @@ public static class CampaignLoader
                     return false;
                 }
 
-                if (def.MapSlot < 0 || def.MapSlot > 99)
+                if (!string.IsNullOrWhiteSpace(def.MapFile))
                 {
-                    error = $"Mission {id}: mapSlot must be in [0, 99].";
+                    if (!MapFileStore.TryLoadMapFile(def.MapFile, out _))
+                    {
+                        error =
+                            $"Mission {id}: mapFile \"{def.MapFile}\" not found under {MapFileStore.MapsDirectory}.";
+                        return false;
+                    }
+                }
+                else if (def.MapSlot < 0 || def.MapSlot > 99)
+                {
+                    error = $"Mission {id}: mapSlot must be in [0, 99], or set mapFile.";
                     return false;
                 }
 

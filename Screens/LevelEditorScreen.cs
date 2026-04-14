@@ -69,6 +69,12 @@ public sealed class LevelEditorScreen : IGameScreen
     private MouseState _mouseWas;
     private bool _saveAsActive;
     private string _saveAsBuffer = "";
+    private bool _newMapDialogActive;
+    private int _newMapField;
+    private string _newMapRoomsWStr = "3";
+    private string _newMapRoomsHStr = "3";
+    private int _defaultRoomsWide = ProcTileMap.RoomsWide;
+    private int _defaultRoomsHigh = ProcTileMap.RoomsHigh;
     private float _viewZoom = 1f;
     private bool _hasHoverTile;
     private int _hoverTileX;
@@ -82,7 +88,7 @@ public sealed class LevelEditorScreen : IGameScreen
     public LevelEditorScreen(Game1 game)
     {
         _game = game;
-        _map = EditorMapData.CreateEmpty(ProcTileMap.WidthTiles, ProcTileMap.HeightTiles);
+        _map = EditorMapData.CreateEmptyRooms(_defaultRoomsWide, _defaultRoomsHigh);
         LoadEditorTextures();
         ClampBrushes();
         ApplyCurrentSlotFromDisk(false);
@@ -178,12 +184,13 @@ public sealed class LevelEditorScreen : IGameScreen
         if (MapFileStore.TryLoad(_slot, out EditorMapData loaded))
         {
             CopyMap(loaded, _map);
+            EditorMapData.GetRoomCounts(loaded.Width, loaded.Height, out _defaultRoomsWide, out _defaultRoomsHigh);
             if (showStatus)
                 SetStatus($"Loaded map_{_slot:D2}.json");
         }
         else
         {
-            var fresh = EditorMapData.CreateEmpty(ProcTileMap.WidthTiles, ProcTileMap.HeightTiles);
+            var fresh = EditorMapData.CreateEmptyRooms(_defaultRoomsWide, _defaultRoomsHigh);
             CopyMap(fresh, _map);
             if (showStatus)
                 SetStatus($"Slot {_slot:D2} empty (new map).");
@@ -287,7 +294,10 @@ public sealed class LevelEditorScreen : IGameScreen
         else if (_tbSave.Contains(mx, my))
         {
             if (MapFileStore.TrySave(_map, _slot))
-                SetStatus($"Saved map_{_slot:D2}.json");
+            {
+                EditorMapData.GetRoomCounts(_map.Width, _map.Height, out _defaultRoomsWide, out _defaultRoomsHigh);
+                SetStatus($"Saved: {MapFileStore.PathForSlot(_slot)}");
+            }
             else
                 SetStatus("Save failed.");
         }
@@ -301,13 +311,7 @@ public sealed class LevelEditorScreen : IGameScreen
             ApplyCurrentSlotFromDisk(true);
         }
         else if (_tbNewMap.Contains(mx, my))
-        {
-            var fresh = EditorMapData.CreateEmpty(ProcTileMap.WidthTiles, ProcTileMap.HeightTiles);
-            CopyMap(fresh, _map);
-            ReloadBackgroundTexture();
-            ClearUndoStack();
-            SetStatus("New map (cleared).");
-        }
+            BeginNewMapDialog();
         else if (_tbRun.Contains(mx, my))
             _game.PlayTestMap(_map);
         else if (_tbLoadBg.Contains(mx, my))
@@ -336,7 +340,11 @@ public sealed class LevelEditorScreen : IGameScreen
         if (keyPressed(Keys.Enter))
         {
             if (MapFileStore.TrySaveNamed(_map, _saveAsBuffer))
-                SetStatus($"Saved {MapFileStore.SanitizeMapBaseName(_saveAsBuffer)}.json");
+            {
+                EditorMapData.GetRoomCounts(_map.Width, _map.Height, out _defaultRoomsWide, out _defaultRoomsHigh);
+                string name = MapFileStore.SanitizeMapBaseName(_saveAsBuffer) + ".json";
+                SetStatus($"Saved: {Path.Combine(MapFileStore.MapsDirectory, name)}");
+            }
             else
                 SetStatus("Save As failed.");
             _saveAsActive = false;
@@ -397,6 +405,82 @@ public sealed class LevelEditorScreen : IGameScreen
             tryAppend('_');
     }
 
+    private void BeginNewMapDialog()
+    {
+        EditorMapData.GetRoomCounts(_map.Width, _map.Height, out int rw, out int rh);
+        _newMapRoomsWStr = rw.ToString();
+        _newMapRoomsHStr = rh.ToString();
+        _newMapField = 0;
+        _newMapDialogActive = true;
+        _status = "New map: rooms wide / high (35 x 20 tiles per room). Tab: switch field. Enter: create. Esc: cancel.";
+        _statusTime = 12f;
+    }
+
+    private void UpdateNewMapDialog(KeyboardState kb)
+    {
+        bool keyPressed(Keys k) => kb.IsKeyDown(k) && !_keysWas.IsKeyDown(k);
+
+        if (keyPressed(Keys.Escape))
+        {
+            _newMapDialogActive = false;
+            SetStatus("New map cancelled.");
+            return;
+        }
+
+        if (keyPressed(Keys.Tab))
+        {
+            _newMapField = 1 - _newMapField;
+            return;
+        }
+
+        if (keyPressed(Keys.Enter))
+        {
+            if (!int.TryParse(_newMapRoomsWStr.Trim(), out int rw))
+                rw = _defaultRoomsWide;
+            if (!int.TryParse(_newMapRoomsHStr.Trim(), out int rh))
+                rh = _defaultRoomsHigh;
+            rw = Math.Clamp(rw, EditorMapData.MinRoomsPerAxis, EditorMapData.MaxRoomsPerAxis);
+            rh = Math.Clamp(rh, EditorMapData.MinRoomsPerAxis, EditorMapData.MaxRoomsPerAxis);
+
+            _defaultRoomsWide = rw;
+            _defaultRoomsHigh = rh;
+            var fresh = EditorMapData.CreateEmptyRooms(rw, rh);
+            CopyMap(fresh, _map);
+            ReloadBackgroundTexture();
+            ClearUndoStack();
+            _newMapDialogActive = false;
+            int tw = fresh.Width;
+            int th = fresh.Height;
+            SetStatus($"New map: {rw}x{rh} rooms ({tw}x{th} tiles).");
+            return;
+        }
+
+        if (keyPressed(Keys.Back))
+        {
+            if (_newMapField == 0 && _newMapRoomsWStr.Length > 0)
+                _newMapRoomsWStr = _newMapRoomsWStr[..^1];
+            else if (_newMapField == 1 && _newMapRoomsHStr.Length > 0)
+                _newMapRoomsHStr = _newMapRoomsHStr[..^1];
+            return;
+        }
+
+        const int maxDigits = 2;
+        for (int i = 0; i <= 9; i++)
+        {
+            if (!keyPressed(Keys.D0 + i) && !keyPressed(Keys.NumPad0 + i))
+                continue;
+            char c = (char)('0' + i);
+            if (_newMapField == 0)
+            {
+                if (_newMapRoomsWStr.Length < maxDigits)
+                    _newMapRoomsWStr += c;
+            }
+            else if (_newMapRoomsHStr.Length < maxDigits)
+                _newMapRoomsHStr += c;
+            return;
+        }
+    }
+
     public void Update(GameTime gameTime, in UiFrameInput input)
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -414,6 +498,15 @@ public sealed class LevelEditorScreen : IGameScreen
         {
             _hasHoverTile = false;
             UpdateSaveAsDialog(kb);
+            _keysWas = kb;
+            _mouseWas = ms;
+            return;
+        }
+
+        if (_newMapDialogActive)
+        {
+            _hasHoverTile = false;
+            UpdateNewMapDialog(kb);
             _keysWas = kb;
             _mouseWas = ms;
             return;
@@ -440,13 +533,7 @@ public sealed class LevelEditorScreen : IGameScreen
             _paletteKind = PaletteKind.View;
 
         if (keyPressed(Keys.F4))
-        {
-            var fresh = EditorMapData.CreateEmpty(ProcTileMap.WidthTiles, ProcTileMap.HeightTiles);
-            CopyMap(fresh, _map);
-            ReloadBackgroundTexture();
-            ClearUndoStack();
-            SetStatus("New map (cleared).");
-        }
+            BeginNewMapDialog();
 
         if (keyPressed(Keys.OemOpenBrackets))
         {
@@ -463,7 +550,10 @@ public sealed class LevelEditorScreen : IGameScreen
         if (keyPressed(Keys.F5))
         {
             if (MapFileStore.TrySave(_map, _slot))
-                SetStatus($"Saved map_{_slot:D2}.json");
+            {
+                EditorMapData.GetRoomCounts(_map.Width, _map.Height, out _defaultRoomsWide, out _defaultRoomsHigh);
+                SetStatus($"Saved: {MapFileStore.PathForSlot(_slot)}");
+            }
             else
                 SetStatus("Save failed.");
         }
@@ -735,12 +825,23 @@ public sealed class LevelEditorScreen : IGameScreen
                     string oid = _objectIds[_objectBrush];
                     _map.Objects[i] = oid;
                     if (!string.IsNullOrEmpty(oid))
-                        _map.Walkable[i] = false;
+                    {
+                        _objectTex.TryGetValue(oid, out Texture2D ot);
+                        ApplyWalkFalseForTextureFootprint(_map, tx, ty, ot);
+                    }
                 }
                 break;
             case PaletteKind.Herbs:
                 if (_herbIds.Count > 0)
-                    _map.Herbs[i] = _herbIds[_herbBrush];
+                {
+                    string hid = _herbIds[_herbBrush];
+                    _map.Herbs[i] = hid;
+                    if (!string.IsNullOrEmpty(hid))
+                    {
+                        _herbTex.TryGetValue(hid, out Texture2D ht);
+                        ApplyWalkFalseForTextureFootprint(_map, tx, ty, ht);
+                    }
+                }
                 break;
             case PaletteKind.Walk:
                 _map.Walkable[i] = true;
@@ -759,11 +860,21 @@ public sealed class LevelEditorScreen : IGameScreen
                 _map.Terrain[i] = EditorMapData.DefaultTerrainId;
                 break;
             case PaletteKind.Objects:
+            {
+                string oldO = _map.Objects[i];
                 _map.Objects[i] = "";
+                if (!string.IsNullOrEmpty(oldO))
+                    EditorMapData.RestoreWalkAfterRemovingOverlayAt(_map, tx, ty, "objects", oldO);
                 break;
+            }
             case PaletteKind.Herbs:
+            {
+                string oldH = _map.Herbs[i];
                 _map.Herbs[i] = "";
+                if (!string.IsNullOrEmpty(oldH))
+                    EditorMapData.RestoreWalkAfterRemovingOverlayAt(_map, tx, ty, "herbs", oldH);
                 break;
+            }
             case PaletteKind.Walk:
                 _map.Walkable[i] = false;
                 break;
@@ -774,9 +885,37 @@ public sealed class LevelEditorScreen : IGameScreen
 
     private static bool CellShowsWalkLetter(EditorMapData map, int idx)
     {
-        if (!string.IsNullOrEmpty(map.Objects[idx]))
+        int w = map.Width;
+        int tx = idx % w;
+        int ty = idx / w;
+        if (OverlayFootprintCollision.CellOverlapsAnyObjectOrHerbFootprint(map, tx, ty))
             return false;
         return map.Walkable[idx];
+    }
+
+    private static void ApplyWalkFalseForTextureFootprint(EditorMapData map, int anchorTx, int anchorTy, Texture2D tex)
+    {
+        GetFootprintFromTexture(tex, out int fw, out int fh);
+        for (int oy = 0; oy < fh; oy++)
+        for (int ox = 0; ox < fw; ox++)
+        {
+            int cx = anchorTx + ox;
+            int cy = anchorTy + oy;
+            if (map.Contains(cx, cy))
+                map.Walkable[map.Pack(cx, cy)] = false;
+        }
+    }
+
+    private static void GetFootprintFromTexture(Texture2D tex, out int fw, out int fh)
+    {
+        if (tex == null)
+        {
+            fw = fh = 1;
+            return;
+        }
+
+        fw = Math.Max(1, (int)Math.Ceiling(tex.Width / (float)ProcTileMap.TileSizePixels));
+        fh = Math.Max(1, (int)Math.Ceiling(tex.Height / (float)ProcTileMap.TileSizePixels));
     }
 
     private static bool IsMapCellVisibleInDesign(int sxI, int syI, int cellWidth) =>
@@ -949,7 +1088,7 @@ public sealed class LevelEditorScreen : IGameScreen
 
         string hint = _paletteKind == PaletteKind.View
             ? "View: wheel=zoom  Shift+wheel=pan H  mid-drag=pan  arrows/WASD=move  +/-=zoom  |  pick another tab to edit"
-            : "Save As: Ctrl+Shift+S or F7  |  Load Bg: Ctrl+Shift+B  |  Ctrl+Z undo (10)  |  1-5 tabs  |  LMB/RMB  |  pan  |  F5/F6/F4  |  Esc menu";
+            : "Maps folder on disk (see path below)  |  Save As: Ctrl+Shift+S or F7  |  Load Bg: Ctrl+Shift+B  |  Ctrl+Z undo  |  1-5 tabs  |  LMB/RMB  |  pan  |  F5/F6  |  F4 / New map = room size  |  Esc menu";
         spriteBatch.DrawString(font, hint, new Vector2(8, GameConfig.DesignHeight - 52), pal.PrimaryWhite, 0f,
             Vector2.Zero, 0.55f, SpriteEffects.None, 0f);
         spriteBatch.DrawString(font, $"Slot {_slot:D2}  ->  {MapFileStore.PathForSlot(_slot)}", new Vector2(8, GameConfig.DesignHeight - 30),
@@ -975,6 +1114,24 @@ public sealed class LevelEditorScreen : IGameScreen
             spriteBatch.DrawString(font, "Enter save   Esc cancel", new Vector2(box.X + 12, box.Y + 44),
                 pal.PrimaryWhite * 0.8f, 0f, Vector2.Zero, 0.42f, SpriteEffects.None, 0f);
         }
+
+        if (_newMapDialogActive)
+        {
+            var box = new Rectangle(GameConfig.DesignWidth / 2 - 220, GameConfig.DesignHeight / 2 - 52, 440, 104);
+            spriteBatch.Draw(pixel, new Rectangle(0, 0, GameConfig.DesignWidth, GameConfig.DesignHeight),
+                Color.Black * 0.45f);
+            UiChrome.FillRect(spriteBatch, pixel, box, pal.ButtonFill, pal.Accent);
+            string wLine = "Rooms wide: " + _newMapRoomsWStr + (_newMapField == 0 ? "_" : "");
+            string hLine = "Rooms high: " + _newMapRoomsHStr + (_newMapField == 1 ? "_" : "");
+            spriteBatch.DrawString(font, wLine, new Vector2(box.X + 12, box.Y + 12), pal.PrimaryWhite, 0f, Vector2.Zero,
+                0.5f, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(font, hLine, new Vector2(box.X + 12, box.Y + 38), pal.PrimaryWhite, 0f, Vector2.Zero,
+                0.5f, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(font,
+                $"Each room is {RoomView.WidthTiles}x{RoomView.HeightTiles} tiles. Range {EditorMapData.MinRoomsPerAxis}-{EditorMapData.MaxRoomsPerAxis}. Tab switch  Enter create  Esc cancel",
+                new Vector2(box.X + 12, box.Y + 68), pal.PrimaryWhite * 0.82f, 0f, Vector2.Zero, 0.36f, SpriteEffects.None,
+                0f);
+        }
     }
 
     private void DrawToolbar(SpriteBatch spriteBatch, SpriteFont font, Texture2D pixel, UiThemePalette pal)
@@ -985,7 +1142,7 @@ public sealed class LevelEditorScreen : IGameScreen
         DrawTb(spriteBatch, font, pixel, _tbLoadMap, "Load Map", pal);
         DrawTb(spriteBatch, font, pixel, _tbSaveAs, "Save As", pal);
         DrawTb(spriteBatch, font, pixel, _tbFreeSlot, "Free slot", pal);
-        DrawTb(spriteBatch, font, pixel, _tbNewMap, "Clear", pal);
+        DrawTb(spriteBatch, font, pixel, _tbNewMap, "New map", pal);
         DrawTb(spriteBatch, font, pixel, _tbRun, "Run", pal);
         DrawTb(spriteBatch, font, pixel, _tbLoadBg, "Load Background", pal);
 

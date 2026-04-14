@@ -15,8 +15,9 @@ public static class MapFileStore
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    /// <summary>Authoring maps next to the game: <c>Content/maps</c> under <see cref="AppContext.BaseDirectory"/>.</summary>
     public static string MapsDirectory =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TheAlchemist", "Maps");
+        Path.Combine(AppContext.BaseDirectory, "Content", "maps");
 
     public static string PathForSlot(int slot)
     {
@@ -95,18 +96,40 @@ public static class MapFileStore
         }
     }
 
-    public static bool TryLoad(int slot, out EditorMapData map)
+    public static bool TryLoad(int slot, out EditorMapData map) => TryLoadFromPath(PathForSlot(slot), out map);
+
+    /// <summary>Loads <paramref name="mapFile"/> from <see cref="MapsDirectory"/> (file name only, e.g. <c>my_map.json</c> or <c>map_00.json</c>).</summary>
+    public static bool TryLoadMapFile(string mapFile, out EditorMapData map)
+    {
+        map = null;
+        if (string.IsNullOrWhiteSpace(mapFile))
+            return false;
+
+        string name = Path.GetFileName(mapFile.Trim());
+        if (name.Length == 0 || name.Contains("..", StringComparison.Ordinal))
+            return false;
+        if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            name += ".json";
+
+        string dir = Path.GetFullPath(MapsDirectory);
+        string path = Path.GetFullPath(Path.Combine(dir, name));
+        if (!path.StartsWith(dir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return TryLoadFromPath(path, out map);
+    }
+
+    private static bool TryLoadFromPath(string path, out EditorMapData map)
     {
         map = null;
         try
         {
-            string path = PathForSlot(slot);
             if (!File.Exists(path))
                 return false;
             string json = File.ReadAllText(path);
             if (!EditorMapData.TryParseMapJson(json, out var m))
                 return false;
-            if (m.Width != ProcTileMap.WidthTiles || m.Height != ProcTileMap.HeightTiles)
+            if (!EditorMapData.IsRoomGridSize(m.Width, m.Height))
                 return false;
             m.NormalizeInPlace();
             map = m;

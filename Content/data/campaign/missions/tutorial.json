@@ -1,6 +1,7 @@
 {
   "schema": 1,
   "id": "tutorial",
+  "mapFile": "map_00.json",
   "mapSlot": 0,
   "title": "Valley path",
   "summary": "Reach the workshop. Gather herbs along the way."

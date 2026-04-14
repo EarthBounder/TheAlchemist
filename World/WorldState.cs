@@ -14,6 +14,10 @@ public sealed class WorldState
     public int PlayerTileX { get; set; }
     public int PlayerTileY { get; set; }
     public int HerbsCollected { get; set; }
+
+    /// <summary>Herb ids picked up this run (editor herb layer or proc flower as <c>flower</c>).</summary>
+    public List<string> InventoryHerbIds { get; set; } = new List<string>();
+
     public List<int> PickedFlowerCells { get; set; } = new List<int>();
 
     /// <summary>When true, this session is a level-editor test play (no main save writes).</summary>
@@ -30,6 +34,7 @@ public sealed class WorldState
             PlayerTileX = px,
             PlayerTileY = py,
             HerbsCollected = 0,
+            InventoryHerbIds = new List<string>(),
             PickedFlowerCells = new List<int>()
         };
     }
@@ -44,6 +49,7 @@ public sealed class WorldState
             PlayerTileX = px,
             PlayerTileY = py,
             HerbsCollected = 0,
+            InventoryHerbIds = new List<string>(),
             PickedFlowerCells = new List<int>(),
             IsTestMapRun = true
         };
@@ -55,6 +61,7 @@ public sealed class WorldState
         if (Schema != CurrentSchema)
         {
             PickedFlowerCells.Clear();
+            InventoryHerbIds?.Clear();
             HerbsCollected = 0;
             Schema = CurrentSchema;
             map.FindStartPosition(out int px, out int py);
@@ -62,6 +69,8 @@ public sealed class WorldState
             PlayerTileY = py;
             return;
         }
+
+        InventoryHerbIds ??= new List<string>();
 
         PlayerTileX = Math.Clamp(PlayerTileX, 0, ProcTileMap.WidthTiles - 1);
         PlayerTileY = Math.Clamp(PlayerTileY, 0, ProcTileMap.HeightTiles - 1);
@@ -79,6 +88,7 @@ public sealed class WorldState
         if (Schema != CurrentSchema)
         {
             PickedFlowerCells.Clear();
+            InventoryHerbIds?.Clear();
             HerbsCollected = 0;
             Schema = CurrentSchema;
             EditorMapData.FindWalkableStart(map, out int px, out int py);
@@ -87,10 +97,13 @@ public sealed class WorldState
             return;
         }
 
+        InventoryHerbIds ??= new List<string>();
+
         PlayerTileX = Math.Clamp(PlayerTileX, 0, map.Width - 1);
         PlayerTileY = Math.Clamp(PlayerTileY, 0, map.Height - 1);
         int i = map.Pack(PlayerTileX, PlayerTileY);
-        if (!TerrainRules.IsWalkableTerrainId(map.Terrain[i]))
+        if (!TerrainRules.IsWalkableTerrainId(map.Terrain[i]) ||
+            !EditorMapData.IsCellWalkableForPlay(map, PlayerTileX, PlayerTileY))
         {
             EditorMapData.FindWalkableStart(map, out int sx, out int sy);
             PlayerTileX = sx;

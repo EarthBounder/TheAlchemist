@@ -8,6 +8,10 @@ public sealed class EditorMapData
 {
     public const int CurrentSchema = 3;
 
+    /// <summary>Room counts per axis when authoring new maps (each room is <see cref="RoomView.WidthTiles"/> x <see cref="RoomView.HeightTiles"/> tiles).</summary>
+    public const int MinRoomsPerAxis = 1;
+    public const int MaxRoomsPerAxis = 16;
+
     public const string DefaultTerrainId = "grass";
 
     public int Schema { get; set; } = CurrentSchema;
@@ -20,7 +24,7 @@ public sealed class EditorMapData
     public string[] Objects { get; set; } = Array.Empty<string>();
     public string[] Herbs { get; set; } = Array.Empty<string>();
 
-    /// <summary>When false, hero cannot enter. Object tiles are forced false in <see cref="NormalizeInPlace"/>.</summary>
+    /// <summary>When false, hero cannot enter (manual paint). Object/herb sprites also block by footprint from their anchor tile.</summary>
     public bool[] Walkable { get; set; } = Array.Empty<bool>();
 
     /// <summary>Optional absolute path to a background image shown under the grid in the editor.</summary>
@@ -54,6 +58,36 @@ public sealed class EditorMapData
         };
     }
 
+    public static int TileWidthFromRooms(int roomsWide) =>
+        Math.Clamp(roomsWide, MinRoomsPerAxis, MaxRoomsPerAxis) * RoomView.WidthTiles;
+
+    public static int TileHeightFromRooms(int roomsHigh) =>
+        Math.Clamp(roomsHigh, MinRoomsPerAxis, MaxRoomsPerAxis) * RoomView.HeightTiles;
+
+    public static EditorMapData CreateEmptyRooms(int roomsWide, int roomsHigh) =>
+        CreateEmpty(TileWidthFromRooms(roomsWide), TileHeightFromRooms(roomsHigh));
+
+    public static bool IsRoomGridSize(int width, int height) =>
+        width > 0 && height > 0 &&
+        width % RoomView.WidthTiles == 0 &&
+        height % RoomView.HeightTiles == 0 &&
+        width / RoomView.WidthTiles <= MaxRoomsPerAxis &&
+        height / RoomView.HeightTiles <= MaxRoomsPerAxis;
+
+    public static void GetRoomCounts(int width, int height, out int roomsWide, out int roomsHigh)
+    {
+        if (IsRoomGridSize(width, height))
+        {
+            roomsWide = width / RoomView.WidthTiles;
+            roomsHigh = height / RoomView.HeightTiles;
+        }
+        else
+        {
+            roomsWide = ProcTileMap.RoomsWide;
+            roomsHigh = ProcTileMap.RoomsHigh;
+        }
+    }
+
     public static EditorMapData Clone(EditorMapData m)
     {
         if (m == null)
@@ -72,18 +106,42 @@ public sealed class EditorMapData
         };
     }
 
-    /// <summary>Hero movement: terrain (e.g. water), walk mask, and objects block.</summary>
+    /// <summary>Hero movement: terrain (e.g. water), walk mask, and full object/herb sprite footprints (anchor = top-left).</summary>
     public static bool IsCellWalkableForPlay(EditorMapData map, int x, int y)
     {
         if (map == null || !map.Contains(x, y))
             return false;
         map.NormalizeInPlace();
         int i = map.Pack(x, y);
-        if (!string.IsNullOrEmpty(map.Objects[i]))
-            return false;
         if (!map.Walkable[i])
             return false;
-        return TerrainRules.IsWalkableTerrainId(map.Terrain[i]);
+        if (!TerrainRules.IsWalkableTerrainId(map.Terrain[i]))
+            return false;
+        if (OverlayFootprintCollision.CellOverlapsAnchoredFootprint(map, x, y, map.Objects, "objects"))
+            return false;
+        if (OverlayFootprintCollision.CellOverlapsAnchoredFootprint(map, x, y, map.Herbs, "herbs"))
+            return false;
+        return true;
+    }
+
+    /// <summary>After removing an object/herb at <paramref name="anchorX"/>,<paramref name="anchorY"/> with id <paramref name="clearedId"/>, sets walk true on cleared footprint cells that are not still under another overlay.</summary>
+    public static void RestoreWalkAfterRemovingOverlayAt(EditorMapData map, int anchorX, int anchorY, string categoryFolderName,
+        string clearedId)
+    {
+        if (map == null || string.IsNullOrEmpty(clearedId))
+            return;
+
+        OverlayFootprintLayout.TryGetCoverageForId(categoryFolderName, clearedId, out int fw, out int fh);
+        for (int oy = 0; oy < fh; oy++)
+        for (int ox = 0; ox < fw; ox++)
+        {
+            int cx = anchorX + ox;
+            int cy = anchorY + oy;
+            if (!map.Contains(cx, cy))
+                continue;
+            if (!OverlayFootprintCollision.CellOverlapsAnyObjectOrHerbFootprint(map, cx, cy))
+                map.Walkable[map.Pack(cx, cy)] = true;
+        }
     }
 
     public static void FindWalkableStart(EditorMapData map, out int px, out int py)
@@ -168,13 +226,6 @@ public sealed class EditorMapData
         {
             if (Herbs[i] == null)
                 Herbs[i] = "";
-        }
-
-        int ow = Math.Min(Objects.Length, Walkable.Length);
-        for (int i = 0; i < ow; i++)
-        {
-            if (!string.IsNullOrEmpty(Objects[i]))
-                Walkable[i] = false;
         }
     }
 

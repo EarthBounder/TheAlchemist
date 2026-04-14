@@ -93,6 +93,52 @@ public sealed class WorldPlayScreen : IGameScreen
         return EditorMapData.IsCellWalkableForPlay(_customMap, tx, ty);
     }
 
+    /// <summary>Custom maps: herb sprites block by footprint; pick from orthogonally adjacent to any footprint tile (Confirm / gamepad A).</summary>
+    private void TryPickAdjacentHerb(in UiFrameInput input)
+    {
+        if (_customMap == null || !input.ConfirmPressed)
+            return;
+
+        _world.InventoryHerbIds ??= new List<string>();
+        int px = _world.PlayerTileX;
+        int py = _world.PlayerTileY;
+
+        bool has = false;
+        int bestAx = 0, bestAy = 0;
+        string bestHid = null;
+
+        for (int ay = 0; ay < _customMap.Height; ay++)
+        for (int ax = 0; ax < _customMap.Width; ax++)
+        {
+            int ai = _customMap.Pack(ax, ay);
+            string hid = _customMap.Herbs[ai];
+            if (string.IsNullOrEmpty(hid))
+                continue;
+
+            OverlayFootprintLayout.TryGetCoverageForId("herbs", hid, out int fw, out int fh);
+            if (!OverlayFootprintLayout.IsOrthoAdjacentToFootprint(px, py, ax, ay, fw, fh))
+                continue;
+
+            if (!has || ay < bestAy || (ay == bestAy && ax < bestAx))
+            {
+                has = true;
+                bestAx = ax;
+                bestAy = ay;
+                bestHid = hid;
+            }
+        }
+
+        if (!has)
+            return;
+
+        _world.InventoryHerbIds.Add(bestHid);
+        _world.HerbsCollected++;
+        _customMap.Herbs[_customMap.Pack(bestAx, bestAy)] = "";
+        EditorMapData.RestoreWalkAfterRemovingOverlayAt(_customMap, bestAx, bestAy, "herbs", bestHid);
+
+        _game.SaveWorld(_world);
+    }
+
     private void ClearFlowerAt(int tx, int ty)
     {
         if (_procMap != null)
@@ -117,6 +163,8 @@ public sealed class WorldPlayScreen : IGameScreen
 
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
         _moveStepCooldown -= dt;
+
+        TryPickAdjacentHerb(in input);
 
         var kb = Keyboard.GetState();
 
@@ -233,15 +281,22 @@ public sealed class WorldPlayScreen : IGameScreen
         if (!CellWalkable(gx, gy))
             return false;
 
-        int w = ProcTileMap.WidthTiles;
-        int h = ProcTileMap.HeightTiles;
+        int w = _customMap != null ? _customMap.Width : ProcTileMap.WidthTiles;
+        int h = _customMap != null ? _customMap.Height : ProcTileMap.HeightTiles;
         int total = w * h;
         var prev = new int[total];
         for (int i = 0; i < total; i++)
             prev[i] = -1;
 
-        int goal = ProcTileMap.Pack(gx, gy);
-        int start = ProcTileMap.Pack(sx, sy);
+        int PackLocal(int x, int y) => x + y * w;
+        void UnpackLocal(int p, out int x, out int y)
+        {
+            x = p % w;
+            y = p / w;
+        }
+
+        int goal = PackLocal(gx, gy);
+        int start = PackLocal(sx, sy);
         if (start == goal)
             return true;
 
@@ -252,7 +307,7 @@ public sealed class WorldPlayScreen : IGameScreen
         while (q.Count > 0)
         {
             int cur = q.Dequeue();
-            ProcTileMap.Unpack(cur, out int cx, out int cy);
+            UnpackLocal(cur, out int cx, out int cy);
 
             for (int i = 0; i < 4; i++)
             {
@@ -263,7 +318,7 @@ public sealed class WorldPlayScreen : IGameScreen
                 if (!CellWalkable(nx, ny))
                     continue;
 
-                int np = ProcTileMap.Pack(nx, ny);
+                int np = PackLocal(nx, ny);
                 if (prev[np] >= 0)
                     continue;
 
@@ -285,7 +340,7 @@ public sealed class WorldPlayScreen : IGameScreen
         int p = goal;
         while (p != start)
         {
-            ProcTileMap.Unpack(p, out int x, out int y);
+            UnpackLocal(p, out int x, out int y);
             stack.Push((x, y));
             p = prev[p];
         }
@@ -326,13 +381,41 @@ public sealed class WorldPlayScreen : IGameScreen
 
         _world.PlayerTileX = nx;
         _world.PlayerTileY = ny;
+        _world.InventoryHerbIds ??= new List<string>();
 
         if (CellTerrain(nx, ny) == TileTerrain.Flower)
         {
             _world.HerbsCollected++;
+            _world.InventoryHerbIds.Add("flower");
             ClearFlowerAt(nx, ny);
             _game.SaveWorld(_world);
         }
+    }
+
+    private static string FormatInventorySuffix(WorldState world)
+    {
+        world.InventoryHerbIds ??= new List<string>();
+        if (world.InventoryHerbIds.Count == 0)
+            return "";
+
+        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (string id in world.InventoryHerbIds)
+        {
+            if (string.IsNullOrEmpty(id))
+                continue;
+            counts.TryGetValue(id, out int c);
+            counts[id] = c + 1;
+        }
+
+        var parts = new List<string>();
+        foreach (var kv in counts)
+            parts.Add($"{kv.Key} x{kv.Value}");
+
+        string s = string.Join(", ", parts);
+        if (s.Length > 64)
+            s = s.Substring(0, 61) + "...";
+
+        return "  |  Inv: " + s;
     }
 
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
@@ -422,9 +505,10 @@ public sealed class WorldPlayScreen : IGameScreen
         int oy = feetY - dh;
         spriteBatch.Draw(hero, new Rectangle(ox, oy, dw, dh), Color.White);
 
+        string inv = FormatInventorySuffix(_world);
         string hud = _customMap != null
-            ? $"Herbs {_world.HerbsCollected}  |  Test map  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  WASD / hold  |  click tile  |  Esc"
-            : $"Herbs {_world.HerbsCollected}  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  Seed {_world.Seed}  |  WASD / hold  |  click tile  |  Esc";
+            ? $"Herbs {_world.HerbsCollected}{inv}  |  Test map  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  WASD / hold  |  click tile  |  Confirm: pick herb  |  Esc"
+            : $"Herbs {_world.HerbsCollected}{inv}  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  Seed {_world.Seed}  |  WASD / hold  |  click tile  |  Esc";
         spriteBatch.DrawString(font, hud, new Vector2(16, GameConfig.DesignHeight - 36), pal.PrimaryWhite, 0f,
             Vector2.Zero, 0.72f, SpriteEffects.None, 0f);
     }

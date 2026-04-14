@@ -48,6 +48,8 @@ public static class SaveStore
                 return false;
             if (w.PickedFlowerCells == null)
                 w.PickedFlowerCells = new System.Collections.Generic.List<int>();
+            if (w.InventoryHerbIds == null)
+                w.InventoryHerbIds = new System.Collections.Generic.List<string>();
             world = w;
             return true;
         }
