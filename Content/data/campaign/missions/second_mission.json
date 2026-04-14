@@ -4,5 +4,6 @@
   "mapFile": "map_01.json",
   "mapSlot": 1,
   "title": "Forest edge",
-  "summary": "A longer walk through the second authored map."
+  "summary": "A longer walk through the second authored map.",
+  "requiredHerbs": 5
 }

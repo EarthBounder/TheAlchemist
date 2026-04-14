@@ -50,6 +50,10 @@ public static class SaveStore
                 w.PickedFlowerCells = new System.Collections.Generic.List<int>();
             if (w.InventoryHerbIds == null)
                 w.InventoryHerbIds = new System.Collections.Generic.List<string>();
+            w.IsCampaignMissionRun = false;
+            w.CampaignMissionHerbGoal = 0;
+            w.CampaignMissionHerbsAtStart = 0;
+            w.CampaignMissionCompleted = false;
             world = w;
             return true;
         }

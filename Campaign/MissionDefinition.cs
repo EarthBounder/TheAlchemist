@@ -26,6 +26,9 @@ public sealed class MissionDefinition
     /// <summary>Short player-facing blurb.</summary>
     public string Summary { get; set; } = "";
 
+    /// <summary>Campaign objective: herbs to gather during this mission.</summary>
+    public int RequiredHerbs { get; set; }
+
     /// <summary>Additional mission fields without schema churn.</summary>
     [JsonExtensionData]
     public Dictionary<string, JsonElement> ExtensionData { get; set; }

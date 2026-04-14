@@ -137,6 +137,7 @@ public sealed class WorldPlayScreen : IGameScreen
         EditorMapData.RestoreWalkAfterRemovingOverlayAt(_customMap, bestAx, bestAy, "herbs", bestHid);
 
         _game.SaveWorld(_world);
+        TryCompleteCampaignMission();
     }
 
     private void ClearFlowerAt(int tx, int ty)
@@ -154,6 +155,9 @@ public sealed class WorldPlayScreen : IGameScreen
 
     public void Update(GameTime gameTime, in UiFrameInput input)
     {
+        if (TryCompleteCampaignMission())
+            return;
+
         if (input.EscapePressed)
         {
             _game.SaveWorld(_world);
@@ -389,7 +393,19 @@ public sealed class WorldPlayScreen : IGameScreen
             _world.InventoryHerbIds.Add("flower");
             ClearFlowerAt(nx, ny);
             _game.SaveWorld(_world);
+            TryCompleteCampaignMission();
         }
+    }
+
+    private bool TryCompleteCampaignMission()
+    {
+        if (!_world.IsCampaignMissionObjectiveComplete() || _world.CampaignMissionCompleted)
+            return false;
+
+        _world.CampaignMissionCompleted = true;
+        _game.SaveWorld(_world);
+        _game.AdvanceCampaignAfterMission();
+        return true;
     }
 
     private static string FormatInventorySuffix(WorldState world)
@@ -506,9 +522,12 @@ public sealed class WorldPlayScreen : IGameScreen
         spriteBatch.Draw(hero, new Rectangle(ox, oy, dw, dh), Color.White);
 
         string inv = FormatInventorySuffix(_world);
+        string goal = "";
+        if (_world.IsCampaignMissionRun && _world.CampaignMissionHerbGoal > 0)
+            goal = $"  |  Goal {_world.CampaignMissionHerbsGathered}/{_world.CampaignMissionHerbGoal}";
         string hud = _customMap != null
-            ? $"Herbs {_world.HerbsCollected}{inv}  |  Test map  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  WASD / hold  |  click tile  |  Confirm: pick herb  |  Esc"
-            : $"Herbs {_world.HerbsCollected}{inv}  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  Seed {_world.Seed}  |  WASD / hold  |  click tile  |  Esc";
+            ? $"Herbs {_world.HerbsCollected}{inv}{goal}  |  Test map  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  WASD / hold  |  click tile  |  Confirm: pick herb  |  Esc"
+            : $"Herbs {_world.HerbsCollected}{inv}{goal}  |  Room {roomIx + 1},{roomIy + 1}/{ProcTileMap.RoomsWide},{ProcTileMap.RoomsHigh}  |  Seed {_world.Seed}  |  WASD / hold  |  click tile  |  Esc";
         spriteBatch.DrawString(font, hud, new Vector2(16, GameConfig.DesignHeight - 36), pal.PrimaryWhite, 0f,
             Vector2.Zero, 0.72f, SpriteEffects.None, 0f);
     }

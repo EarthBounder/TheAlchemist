@@ -203,6 +203,12 @@ public static class CampaignLoader
                     return false;
                 }
 
+                if (def.RequiredHerbs <= 0)
+                {
+                    error = $"Mission {id}: requiredHerbs must be > 0.";
+                    return false;
+                }
+
                 missions[i] = def;
             }
             catch (Exception ex)

@@ -23,6 +23,12 @@ public sealed class WorldState
     /// <summary>When true, this session is a level-editor test play (no main save writes).</summary>
     public bool IsTestMapRun { get; set; }
 
+    /// <summary>When true, this session is a campaign mission (use pause to continue the story after playing).</summary>
+    public bool IsCampaignMissionRun { get; set; }
+    public int CampaignMissionHerbGoal { get; set; }
+    public int CampaignMissionHerbsAtStart { get; set; }
+    public bool CampaignMissionCompleted { get; set; }
+
     public static WorldState NewRun(int seed)
     {
         var map = new ProcTileMap(seed);
@@ -55,6 +61,23 @@ public sealed class WorldState
         };
     }
 
+    public static WorldState NewCampaignMissionPlay(EditorMapData map)
+    {
+        EditorMapData.FindWalkableStart(map, out int px, out int py);
+        return new WorldState
+        {
+            Schema = CurrentSchema,
+            Seed = 0,
+            PlayerTileX = px,
+            PlayerTileY = py,
+            HerbsCollected = 0,
+            InventoryHerbIds = new List<string>(),
+            PickedFlowerCells = new List<int>(),
+            IsTestMapRun = true,
+            IsCampaignMissionRun = true
+        };
+    }
+
     /// <summary>Clamp player and migrate stale saves after map layout changes.</summary>
     public void EnsureCompatibleWithMap(ProcTileMap map)
     {
@@ -63,6 +86,7 @@ public sealed class WorldState
             PickedFlowerCells.Clear();
             InventoryHerbIds?.Clear();
             HerbsCollected = 0;
+            CampaignMissionCompleted = false;
             Schema = CurrentSchema;
             map.FindStartPosition(out int px, out int py);
             PlayerTileX = px;
@@ -90,6 +114,7 @@ public sealed class WorldState
             PickedFlowerCells.Clear();
             InventoryHerbIds?.Clear();
             HerbsCollected = 0;
+            CampaignMissionCompleted = false;
             Schema = CurrentSchema;
             EditorMapData.FindWalkableStart(map, out int px, out int py);
             PlayerTileX = px;
@@ -110,4 +135,10 @@ public sealed class WorldState
             PlayerTileY = sy;
         }
     }
+
+    public int CampaignMissionHerbsGathered =>
+        Math.Max(0, HerbsCollected - CampaignMissionHerbsAtStart);
+
+    public bool IsCampaignMissionObjectiveComplete() =>
+        IsCampaignMissionRun && CampaignMissionHerbGoal > 0 && CampaignMissionHerbsGathered >= CampaignMissionHerbGoal;
 }

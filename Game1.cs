@@ -27,6 +27,11 @@ public sealed class Game1 : Game
     private IGameScreen _screen = null!;
     private GameSettings _settings = null!;
     private EditorMapData _testPlayMap;
+    private EditorMapData _campaignPlayMap;
+    private WorldState _campaignCheckpointWorld;
+    private LoadedCampaign _campaign;
+    private GameFlowProgress _campaignProgress;
+    private bool _campaignRunActive;
 
     public SpriteFont UiFont { get; private set; } = null!;
     public Texture2D Pixel { get; private set; } = null!;
@@ -50,12 +55,14 @@ public sealed class Game1 : Game
     public void ShowMainMenu()
     {
         _testPlayMap = null;
+        EndCampaignRun();
         DisposeLevelEditorIfActive();
         _screen = new MainMenuScreen(this);
     }
 
     public void ShowLevelEditor()
     {
+        EndCampaignRun();
         DisposeLevelEditorIfActive();
         _screen = new LevelEditorScreen(this);
     }
@@ -63,6 +70,7 @@ public sealed class Game1 : Game
     /// <summary>Intro, interludes, and outro only (missions skipped). For dialogue authoring.</summary>
     public void ShowCampaignDebugStory()
     {
+        EndCampaignRun();
         DisposeLevelEditorIfActive();
         if (!CampaignLoader.TryLoad(CampaignLoader.DefaultCampaignRoot, out LoadedCampaign campaign, out string err))
         {
@@ -73,12 +81,120 @@ public sealed class Game1 : Game
         _screen = new CampaignDebugStoryScreen(this, campaign, null);
     }
 
+    /// <summary>Starts a new campaign run: intro, (mission, interlude)*, outro per <see cref="GameFlowSchedule"/>.</summary>
+    public void BeginNewCampaignJourney()
+    {
+        EndCampaignRun();
+        DisposeLevelEditorIfActive();
+        if (!CampaignLoader.TryLoad(CampaignLoader.DefaultCampaignRoot, out LoadedCampaign campaign, out string err))
+        {
+            _screen = new CampaignDebugStoryScreen(this, null, err ?? "Unknown error.");
+            return;
+        }
+
+        _campaign = campaign;
+        _campaignProgress = campaign.CreateFlowProgress();
+        _campaignRunActive = true;
+        PresentCampaignBeat();
+    }
+
+    public void PresentCampaignBeat()
+    {
+        if (!_campaignRunActive || _campaign == null || _campaignProgress == null)
+        {
+            ShowMainMenu();
+            return;
+        }
+
+        if (_campaignProgress.IsComplete)
+        {
+            EndCampaignRun();
+            ShowMainMenu();
+            return;
+        }
+
+        switch (_campaignProgress.CurrentBeat)
+        {
+            case GameFlowBeat.Intro:
+            case GameFlowBeat.Interlude:
+            case GameFlowBeat.Outro:
+                _screen = new CampaignDialogueScreen(this, _campaign, _campaignProgress);
+                break;
+            case GameFlowBeat.Mission:
+                StartCampaignMissionWorld();
+                break;
+        }
+    }
+
+    public void AdvanceCampaignAfterMission()
+    {
+        if (!_campaignRunActive || _campaignProgress == null)
+            return;
+        if (_campaignProgress.CurrentBeat != GameFlowBeat.Mission)
+            return;
+        SaveCampaignCheckpoint();
+        _campaignProgress.TryAdvance();
+        _campaignPlayMap = null;
+        PresentCampaignBeat();
+    }
+
+    public void SaveCampaignCheckpoint()
+    {
+        if (!_campaignRunActive || _campaignCheckpointWorld == null)
+            return;
+        SaveStore.TrySave(_campaignCheckpointWorld);
+    }
+
+    public void EndCampaignRun()
+    {
+        _campaignRunActive = false;
+        _campaign = null;
+        _campaignProgress = null;
+        _campaignPlayMap = null;
+        _campaignCheckpointWorld = null;
+    }
+
+    public bool IsCampaignRunActive => _campaignRunActive;
+
+    private void StartCampaignMissionWorld()
+    {
+        int mi = GameFlowSchedule.MissionOrdinal(_campaignProgress.CurrentBeatIndex, _campaignProgress.MissionCount);
+        MissionDefinition def = _campaign.Missions[mi];
+        if (_campaign.TryLoadMapForMission(mi, out EditorMapData map) && map != null)
+        {
+            _campaignPlayMap = EditorMapData.Clone(map);
+            WorldState world = WorldState.NewCampaignMissionPlay(_campaignPlayMap);
+            world.CampaignMissionHerbGoal = def.RequiredHerbs;
+            world.CampaignMissionHerbsAtStart = world.HerbsCollected;
+            world.CampaignMissionCompleted = false;
+            _campaignCheckpointWorld = world;
+            _screen = new WorldPlayScreen(this, world, _campaignPlayMap);
+        }
+        else
+        {
+            int seed = Environment.TickCount;
+            var world = WorldState.NewRun(seed);
+            world.IsCampaignMissionRun = true;
+            world.IsTestMapRun = true;
+            world.CampaignMissionHerbGoal = def.RequiredHerbs;
+            world.CampaignMissionHerbsAtStart = world.HerbsCollected;
+            world.CampaignMissionCompleted = false;
+            _campaignCheckpointWorld = world;
+            _screen = new WorldPlayScreen(this, world, null);
+        }
+    }
+
     public void ShowWorld(WorldState world)
     {
+        if (!world.IsCampaignMissionRun)
+            EndCampaignRun();
+        else
+            _campaignCheckpointWorld = world;
+
         EditorMapData custom = null;
         if (world.IsTestMapRun)
         {
-            custom = _testPlayMap;
+            custom = world.IsCampaignMissionRun ? _campaignPlayMap : _testPlayMap;
             if (custom == null)
                 world.IsTestMapRun = false;
         }
@@ -90,6 +206,7 @@ public sealed class Game1 : Game
 
     public void PlayTestMap(EditorMapData mapSnapshot)
     {
+        EndCampaignRun();
         DisposeLevelEditorIfActive();
         _testPlayMap = EditorMapData.Clone(mapSnapshot);
         _screen = new WorldPlayScreen(this, WorldState.NewTestMapPlay(_testPlayMap), _testPlayMap);
@@ -103,7 +220,7 @@ public sealed class Game1 : Game
 
     public void SaveWorld(WorldState world)
     {
-        if (world.IsTestMapRun)
+        if (world.IsTestMapRun && !world.IsCampaignMissionRun)
             return;
         SaveStore.TrySave(world);
     }

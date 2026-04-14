@@ -122,7 +122,7 @@ public sealed class MainMenuScreen : IGameScreen
         }
 
         if (hitNew || (input.ConfirmPressed && _focus == (HasSave ? 1 : 0)))
-            _game.ShowWorld(WorldState.NewRun(Environment.TickCount));
+            _game.BeginNewCampaignJourney();
         else if (hitEditor || (input.ConfirmPressed && _focus == (HasSave ? 2 : 1)))
             _game.ShowLevelEditor();
         else if (hitStoryDebug || (input.ConfirmPressed && _focus == (HasSave ? 3 : 2)))
