@@ -20,6 +20,20 @@
 /build:Fonts/Roboto.spritefont
 #end
 
+#begin Fonts/Title.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Fonts/Title.spritefont
+#end
+
+#begin Fonts/MenuButton.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Fonts/MenuButton.spritefont
+#end
+
 #begin art/hero/hero.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -31,5 +45,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:art/hero/hero.png
+#end
+
+#begin art/title/title_right.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:art/title/title_right.png
 #end
 

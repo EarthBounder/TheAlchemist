@@ -33,9 +33,9 @@ public sealed class PauseMenuScreen : IGameScreen
         const int padX = 24;
         const int padY = 12;
         const string a = "Resume";
-        const string b = "Continue story";
-        const string c = "Main menu";
-        const string d = "Quit to desktop";
+        const string b = "Continue Story";
+        const string c = "Main Menu";
+        const string d = "Quit to Desktop";
         float mw = Math.Max(Math.Max(font.MeasureString(a).X, font.MeasureString(c).X), font.MeasureString(d).X) *
                    BtnScale;
         if (CampaignMissionPause)
@@ -129,9 +129,9 @@ public sealed class PauseMenuScreen : IGameScreen
 
         DrawBtn(spriteBatch, font, pixel, _resume, "Resume", _focus == 0, pal);
         if (CampaignMissionPause)
-            DrawBtn(spriteBatch, font, pixel, _continueStory, "Continue story", _focus == 1, pal);
-        DrawBtn(spriteBatch, font, pixel, _mainMenu, "Main menu", _focus == (CampaignMissionPause ? 2 : 1), pal);
-        DrawBtn(spriteBatch, font, pixel, _quit, "Quit to desktop", _focus == (CampaignMissionPause ? 3 : 2), pal);
+            DrawBtn(spriteBatch, font, pixel, _continueStory, "Continue Story", _focus == 1, pal);
+        DrawBtn(spriteBatch, font, pixel, _mainMenu, "Main Menu", _focus == (CampaignMissionPause ? 2 : 1), pal);
+        DrawBtn(spriteBatch, font, pixel, _quit, "Quit to Desktop", _focus == (CampaignMissionPause ? 3 : 2), pal);
     }
 
     private static void DrawBtn(SpriteBatch sb, SpriteFont font, Texture2D pixel, Rectangle r, string t, bool hot,

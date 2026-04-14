@@ -9,6 +9,7 @@ namespace TheAlchemist.Screens;
 
 public sealed class MainMenuScreen : IGameScreen
 {
+    private static readonly Color MainTitleGold = new(0xF6, 0xCD, 0x26);
     private readonly Game1 _game;
     private Rectangle _continue;
     private Rectangle _newRun;
@@ -16,7 +17,7 @@ public sealed class MainMenuScreen : IGameScreen
     private Rectangle _storyDebug;
     private Rectangle _quit;
     private int _focus;
-    private const float BtnScale = 1.12f;
+    private const float BtnScale = 1f;
 
     public MainMenuScreen(Game1 game) => _game = game;
 
@@ -26,14 +27,14 @@ public sealed class MainMenuScreen : IGameScreen
 
     private void EnsureLayout()
     {
-        var font = _game.UiFont;
+        var font = _game.MenuButtonFont ?? _game.UiFont;
         const int padX = 28;
         const int padY = 14;
         const string tContinue = "Continue";
-        const string tNew = "New journey";
-        const string tEditor = "Level editor";
-        const string tStoryDebug = "Story debug";
-        const string tQuit = "Quit to desktop";
+        const string tNew = "New Journey";
+        const string tEditor = "Level Editor";
+        const string tStoryDebug = "Story Debug";
+        const string tQuit = "Quit to Desktop";
 
         float maxTextW = font.MeasureString(tNew).X * BtnScale;
         if (HasSave)
@@ -134,20 +135,35 @@ public sealed class MainMenuScreen : IGameScreen
     public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
     {
         EnsureLayout();
-        var font = _game.UiFont;
+        var fallback = _game.UiFont;
+        var font = _game.MenuButtonFont ?? fallback;
+        var titleFont = _game.TitleFont ?? fallback;
         var pixel = _game.Pixel;
         var pal = _game.UiPalette;
 
-        spriteBatch.DrawString(font, GameConfig.Title, new Vector2(96, 120), pal.TitleText, 0f, Vector2.Zero, 1.65f,
+        Texture2D right = _game.TitleRightSprite;
+        if (right != null)
+        {
+            int maxW = 520;
+            int maxH = 520;
+            float s = Math.Min(maxW / (float)right.Width, maxH / (float)right.Height);
+            int dw = Math.Max(1, (int)Math.Round(right.Width * s));
+            int dh = Math.Max(1, (int)Math.Round(right.Height * s));
+            int x = GameConfig.DesignWidth - dw - 48;
+            int y = (GameConfig.DesignHeight - dh) / 2 + 10;
+            spriteBatch.Draw(right, new Rectangle(x, y, dw, dh), Color.White);
+        }
+
+        spriteBatch.DrawString(titleFont, GameConfig.Title, new Vector2(96, 96), MainTitleGold, 0f, Vector2.Zero, 1f,
             SpriteEffects.None, 0f);
 
         if (HasSave)
             DrawButton(spriteBatch, font, pixel, _continue, "Continue", _focus == 0, BtnScale, pal);
 
-        DrawButton(spriteBatch, font, pixel, _newRun, "New journey", _focus == (HasSave ? 1 : 0), BtnScale, pal);
-        DrawButton(spriteBatch, font, pixel, _levelEditor, "Level editor", _focus == (HasSave ? 2 : 1), BtnScale, pal);
-        DrawButton(spriteBatch, font, pixel, _storyDebug, "Story debug", _focus == (HasSave ? 3 : 2), BtnScale, pal);
-        DrawButton(spriteBatch, font, pixel, _quit, "Quit to desktop", _focus == FocusMax, BtnScale, pal);
+        DrawButton(spriteBatch, font, pixel, _newRun, "New Journey", _focus == (HasSave ? 1 : 0), BtnScale, pal);
+        DrawButton(spriteBatch, font, pixel, _levelEditor, "Level Editor", _focus == (HasSave ? 2 : 1), BtnScale, pal);
+        DrawButton(spriteBatch, font, pixel, _storyDebug, "Story Debug", _focus == (HasSave ? 3 : 2), BtnScale, pal);
+        DrawButton(spriteBatch, font, pixel, _quit, "Quit to Desktop", _focus == FocusMax, BtnScale, pal);
     }
 
     private static void DrawButton(
@@ -161,7 +177,7 @@ public sealed class MainMenuScreen : IGameScreen
         UiThemePalette pal)
     {
         var fill = focused ? pal.ButtonFillFocused : pal.ButtonFill;
-        var border = focused ? pal.Accent : pal.ButtonBorder;
+        var border = focused ? MainTitleGold : pal.ButtonBorder;
         UiChrome.FillRect(spriteBatch, pixel, bounds, fill, border);
         UiChrome.DrawLabel(spriteBatch, font, label, bounds, focused ? pal.ButtonLabelFocused : pal.ButtonLabel, scale);
     }

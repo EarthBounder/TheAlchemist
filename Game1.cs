@@ -34,8 +34,11 @@ public sealed class Game1 : Game
     private bool _campaignRunActive;
 
     public SpriteFont UiFont { get; private set; } = null!;
+    public SpriteFont TitleFont { get; private set; } = null!;
+    public SpriteFont MenuButtonFont { get; private set; } = null!;
     public Texture2D Pixel { get; private set; } = null!;
     public Texture2D HeroSprite { get; private set; } = null!;
+    public Texture2D TitleRightSprite { get; private set; } = null!;
 
     public GameSettings Settings => _settings;
     public UiThemePalette UiPalette => UiThemes.Get(_settings.ThemeId);
@@ -277,7 +280,10 @@ public sealed class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         UiFont = Content.Load<SpriteFont>("Fonts/Roboto");
+        TitleFont = Content.Load<SpriteFont>("Fonts/Title");
+        MenuButtonFont = Content.Load<SpriteFont>("Fonts/MenuButton");
         HeroSprite = Content.Load<Texture2D>("art/hero/hero");
+        TitleRightSprite = Content.Load<Texture2D>("art/title/title_right");
 
         Pixel = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
         Pixel.SetData(new[] { Color.White });
