@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "speakerPortraits": {
-    "Narrator": "narrator.png"
+    "Narrator": "hero1.png"
   },
   "lines": [
     { "speaker": "Narrator", "text": "The road to the workshop is long." },

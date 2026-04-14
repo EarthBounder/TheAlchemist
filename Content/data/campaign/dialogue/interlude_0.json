@@ -1,10 +1,13 @@
 {
   "schema": 1,
   "speakerPortraits": {
-    "Narrator": "narrator.png"
+    "Hero": "hero1.png",
+    "Peasant": "peasant1.png"
   },
   "lines": [
-    { "speaker": "Narrator", "text": "The first trial is behind you." },
-    { "text": "Rest, then press on to the next map." }
+    { "speaker": "Peasant", "text": "You made it out of the valley! We heard the wolves last night." },
+    { "speaker": "Hero", "text": "I kept to the path. The herbs are safe in my pack." },
+    { "speaker": "Peasant", "text": "Good. The elder will want to hear that. Rest here if you need water." },
+    { "speaker": "Hero", "text": "Thanks. I push on at dawn." }
   ]
 }

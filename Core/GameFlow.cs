@@ -57,6 +57,23 @@ public static class GameFlowSchedule
             throw new InvalidOperationException("Current beat is not an interlude.");
         return beatIndex / 2 - 1;
     }
+
+    /// <summary>
+    /// Beat indices for debug story mode: intro, every interlude, outro (all mission beats skipped).
+    /// </summary>
+    public static int[] DebugStorySkipMissionsBeatIndices(int missionCount)
+    {
+        if (missionCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(missionCount));
+        int total = TotalBeats(missionCount);
+        var beats = new int[1 + missionCount + 1];
+        int w = 0;
+        beats[w++] = 0;
+        for (int i = 0; i < missionCount; i++)
+            beats[w++] = 2 + 2 * i;
+        beats[w++] = total - 1;
+        return beats;
+    }
 }
 
 /// <summary>Runtime position in a <see cref="GameFlowSchedule"/> for one campaign run.</summary>

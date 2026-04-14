@@ -1,10 +1,13 @@
 {
   "schema": 1,
   "speakerPortraits": {
-    "Narrator": "narrator.png"
+    "Hero": "hero2.png",
+    "Peasant": "peasant3.png"
   },
   "lines": [
-    { "speaker": "Narrator", "text": "Two maps lie behind you now." },
-    { "text": "The journey nears its close." }
+    { "speaker": "Peasant", "text": "Another traveler! You look like you have walked two maps in one week." },
+    { "speaker": "Hero", "text": "Feels longer than that. The forest edge was kinder than I feared." },
+    { "speaker": "Peasant", "text": "Take this bread. The road home is shorter when you are not hungry." },
+    { "speaker": "Hero", "text": "I owe you one. When I return I will bring salve for that arm." }
   ]
 }

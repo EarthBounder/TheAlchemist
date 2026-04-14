@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "speakerPortraits": {
-    "Narrator": "narrator.png"
+    "Narrator": "hero2.png"
   },
   "lines": [
     { "speaker": "Narrator", "text": "The alchemist returns home at last." },

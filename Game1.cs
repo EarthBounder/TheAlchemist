@@ -2,6 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TheAlchemist.Campaign;
 using TheAlchemist.Core;
 using TheAlchemist.Persistence;
 using TheAlchemist.Screens;
@@ -57,6 +58,19 @@ public sealed class Game1 : Game
     {
         DisposeLevelEditorIfActive();
         _screen = new LevelEditorScreen(this);
+    }
+
+    /// <summary>Intro, interludes, and outro only (missions skipped). For dialogue authoring.</summary>
+    public void ShowCampaignDebugStory()
+    {
+        DisposeLevelEditorIfActive();
+        if (!CampaignLoader.TryLoad(CampaignLoader.DefaultCampaignRoot, out LoadedCampaign campaign, out string err))
+        {
+            _screen = new CampaignDebugStoryScreen(this, null, err ?? "Unknown error.");
+            return;
+        }
+
+        _screen = new CampaignDebugStoryScreen(this, campaign, null);
     }
 
     public void ShowWorld(WorldState world)
